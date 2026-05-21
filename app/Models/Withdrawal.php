@@ -20,6 +20,7 @@ class Withdrawal extends Model
         'amount',
         'status',
         'notes',
+        'processed_by',
     ];
 
     protected function casts(): array
@@ -34,5 +35,10 @@ class Withdrawal extends Model
     {
         /** @var \Illuminate\Database\Eloquent\Relations\BelongsTo<User, Withdrawal> */
         return $this->belongsTo(User::class);
+    }
+
+    public function processor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'processed_by');
     }
 }

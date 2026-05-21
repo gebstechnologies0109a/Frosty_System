@@ -1,5 +1,11 @@
 <?php
 
+use App\Enums\UserRole;
+use App\Http\Controllers\Admin\AdminDistributorController;
+use App\Http\Controllers\Admin\AdminOperatorController;
+use App\Http\Controllers\Admin\AdminPendingOrderController;
+use App\Http\Controllers\Admin\AdminPendingWithdrawalController;
+use App\Http\Controllers\Admin\AdminProductController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\FinanceController;
 use App\Http\Controllers\Admin\OrderAnalyticsController;
@@ -12,6 +18,7 @@ use App\Http\Controllers\Admin\PurchasingProductController;
 use App\Http\Controllers\Admin\StockMovementController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Models\User;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Distributor\DashboardController as DistributorDashboardController;
 use App\Http\Controllers\Distributor\DistributorAnalyticsController;
@@ -39,6 +46,9 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::post('/logout', [LoginController::class, 'logout'])->middleware('auth')->name('logout');
+
+Route::bind('operator', fn (string $value) => User::query()->where('role', UserRole::Operator)->findOrFail($value));
+Route::bind('distributor', fn (string $value) => User::query()->where('role', UserRole::Distributor)->findOrFail($value));
 
 Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     Route::middleware('role:super_admin,purchasing_admin,finance_admin,it_admin')->group(function () {
@@ -68,10 +78,15 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
             });
         });
 
-        Route::get('/products', fn () => to_route('admin.purchasing.products.index'));
+        Route::get('/products', [AdminProductController::class, 'index'])->name('products.index');
+        Route::get('/products/create', [AdminProductController::class, 'create'])->name('products.create');
         Route::get('/products/bulk-edit', fn () => to_route('admin.purchasing.products.index'));
-        Route::get('/products/create', fn () => to_route('admin.purchasing.products.create'));
-        Route::get('/products/{product}/edit', fn (App\Models\Product $product) => to_route('admin.purchasing.products.edit', $product));
+        Route::get('/products/{product}', [AdminProductController::class, 'show'])->name('products.show');
+        Route::get('/products/{product}/edit', [AdminProductController::class, 'edit'])->name('products.edit');
+        Route::delete('/products/{product}', [AdminProductController::class, 'destroy'])->name('products.destroy');
+        Route::patch('/products/{product}/toggle-status', [AdminProductController::class, 'toggleStatus'])->name('products.toggle-status');
+        Route::get('/products/{product}/stock-logs', [AdminProductController::class, 'stockLogs'])->name('products.stock-logs');
+        Route::get('/products/{product}/price-history', [AdminProductController::class, 'priceHistory'])->name('products.price-history');
 
         Route::middleware('role:super_admin,finance_admin,purchasing_admin')->group(function () {
             Route::get('/orders/analytics', [OrderAnalyticsController::class, 'index'])->name('orders.analytics');
@@ -97,6 +112,30 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
         Route::middleware('role:super_admin')->group(function () {
             Route::get('/users/create', [AdminUserController::class, 'create'])->name('users.create');
             Route::post('/users', [AdminUserController::class, 'store'])->name('users.store');
+
+            Route::resource('operators', AdminOperatorController::class);
+            Route::patch('/operators/{operator}/toggle-status', [AdminOperatorController::class, 'toggleStatus'])->name('operators.toggle-status');
+            Route::post('/operators/{operator}/reset-password', [AdminOperatorController::class, 'resetPassword'])->name('operators.reset-password');
+            Route::get('/operators/{operator}/inventory', [AdminOperatorController::class, 'inventory'])->name('operators.inventory');
+            Route::get('/operators/{operator}/store-menu', [AdminOperatorController::class, 'storeMenu'])->name('operators.store-menu');
+            Route::get('/operators/{operator}/pos-logs', [AdminOperatorController::class, 'posLogs'])->name('operators.pos-logs');
+            Route::get('/operators/{operator}/daily-closings', [AdminOperatorController::class, 'dailyClosings'])->name('operators.daily-closings');
+
+            Route::resource('distributors', AdminDistributorController::class);
+            Route::patch('/distributors/{distributor}/toggle-status', [AdminDistributorController::class, 'toggleStatus'])->name('distributors.toggle-status');
+            Route::post('/distributors/{distributor}/reset-password', [AdminDistributorController::class, 'resetPassword'])->name('distributors.reset-password');
+            Route::get('/distributors/{distributor}/orders', [AdminDistributorController::class, 'orders'])->name('distributors.orders');
+
+            Route::get('/orders/pending', [AdminPendingOrderController::class, 'index'])->name('orders.pending');
+            Route::get('/orders/pending/{order}', [AdminPendingOrderController::class, 'show'])->name('orders.pending.show');
+            Route::post('/orders/pending/{order}/approve', [AdminPendingOrderController::class, 'approve'])->name('orders.pending.approve');
+            Route::post('/orders/pending/{order}/reject', [AdminPendingOrderController::class, 'reject'])->name('orders.pending.reject');
+            Route::patch('/orders/pending/{order}/status', [AdminPendingOrderController::class, 'updateStatus'])->name('orders.pending.update-status');
+
+            Route::get('/withdrawals/pending', [AdminPendingWithdrawalController::class, 'index'])->name('withdrawals.pending');
+            Route::get('/withdrawals/pending/{withdrawal}', [AdminPendingWithdrawalController::class, 'show'])->name('withdrawals.pending.show');
+            Route::post('/withdrawals/pending/{withdrawal}/approve', [AdminPendingWithdrawalController::class, 'approve'])->name('withdrawals.pending.approve');
+            Route::post('/withdrawals/pending/{withdrawal}/reject', [AdminPendingWithdrawalController::class, 'reject'])->name('withdrawals.pending.reject');
 
             Route::get('/operator-products', [AdminOperatorProductController::class, 'index'])->name('operator-products.index');
             Route::put('/operator-products/{operatorProduct}', [AdminOperatorProductController::class, 'update'])->name('operator-products.update');

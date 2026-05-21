@@ -17,13 +17,17 @@
             @if ($role?->isAdmin())
                 <a class="nav-link" href="{{ route('admin.dashboard') }}">Admin</a>
                 @if ($role === \App\Enums\UserRole::PurchasingAdmin || $role === \App\Enums\UserRole::SuperAdmin)
-                    <a class="nav-link" href="{{ route('admin.purchasing.products.index') }}">Products</a>
+                    <a class="nav-link" href="{{ route('admin.products.index') }}">Products</a>
                 @endif
                 @if ($role === \App\Enums\UserRole::PurchasingAdmin)
                     <a class="nav-link" href="{{ route('admin.purchasing.analytics') }}">Analytics</a>
                     <a class="nav-link" href="{{ route('admin.purchasing.stock-movements.index') }}">Stock Logs</a>
                 @endif
                 @if ($role === \App\Enums\UserRole::SuperAdmin)
+                    <a class="nav-link" href="{{ route('admin.operators.index') }}">Operators</a>
+                    <a class="nav-link" href="{{ route('admin.distributors.index') }}">Distributors</a>
+                    <a class="nav-link" href="{{ route('admin.orders.pending') }}">Pending Orders</a>
+                    <a class="nav-link" href="{{ route('admin.withdrawals.pending') }}">Withdrawals</a>
                     <a class="nav-link" href="{{ route('admin.purchasing.stock-movements.index') }}">Stock Logs</a>
                     <a class="nav-link" href="{{ route('admin.operator-products.index') }}">Store Products</a>
                     <a class="nav-link" href="{{ route('admin.pos.daily-closings.index') }}">POS Closings</a>
