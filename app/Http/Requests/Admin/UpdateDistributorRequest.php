@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Enums\DistributorPricingRegion;
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use Illuminate\Foundation\Http\FormRequest;
@@ -24,6 +25,7 @@ class UpdateDistributorRequest extends FormRequest
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($distributor?->id)],
             'status' => ['required', Rule::enum(UserStatus::class)],
             'is_main' => ['sometimes', 'boolean'],
+            'pricing_region' => ['required', Rule::enum(DistributorPricingRegion::class)],
         ];
     }
 }

@@ -7,6 +7,7 @@
 ])
 <div class="row g-3 mb-3">
     <div class="col-md-4"><div class="card p-3"><div class="small text-muted">Status</div><div class="fw-bold">{{ $distributor->status->value }}</div></div></div>
+    <div class="col-md-4"><div class="card p-3"><div class="small text-muted">Pricing region</div><div class="fw-bold">{{ $profile?->pricingRegion()->label() ?? 'Luzon' }}</div></div></div>
     <div class="col-md-4"><div class="card p-3"><div class="small text-muted">Referred operators</div><div class="fw-bold">{{ $operatorCount }}</div></div></div>
     <div class="col-md-4"><div class="card p-3"><div class="small text-muted">Orders</div><div class="fw-bold">{{ $orderCount }}</div></div></div>
 </div>

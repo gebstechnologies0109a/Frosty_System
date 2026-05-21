@@ -9,6 +9,10 @@
         <div class="mb-3"><label class="form-label">Status</label>
             <select name="status" class="form-select">@foreach ($statuses as $s)<option value="{{ $s->value }}" @selected(old('status', $distributor->status->value) === $s->value)>{{ ucfirst($s->value) }}</option>@endforeach</select>
         </div>
+        @include('admin.distributors._pricing_region', [
+            'pricingRegions' => $pricingRegions,
+            'selected' => old('pricing_region', $profile?->pricing_region?->value ?? 'luzon'),
+        ])
         @if ($profile && ! $profile->is_main)
             <div class="form-check mb-3"><input type="checkbox" name="is_main" value="1" class="form-check-input" id="is_main" @checked(old('is_main', $profile->is_main))><label class="form-check-label" for="is_main">Main distributor</label></div>
         @endif

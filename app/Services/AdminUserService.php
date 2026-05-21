@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\DistributorPricingRegion;
 use App\Enums\PriceRegion;
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
@@ -25,8 +26,11 @@ final class AdminUserService
     public function create(array $data, ?UploadedFile $photo = null): User
     {
         return DB::transaction(function () use ($data, $photo) {
+            $data = $this->normalizeNameFields($data);
             $role = UserRole::from($data['role']);
             $name = User::fullNameFromParts($data['first_name'], $data['last_name'] ?? '');
+
+            $operatorRegion = $this->resolveOperatorPriceRegion($data, $role);
 
             $user = User::query()->create([
                 'name' => $name,
@@ -36,7 +40,7 @@ final class AdminUserService
                 'password' => $data['password'],
                 'role' => $role,
                 'status' => UserStatus::from($data['status'] ?? UserStatus::Active->value),
-                'region' => isset($data['region']) ? PriceRegion::from($data['region']) : PriceRegion::Luzon,
+                'region' => $operatorRegion,
                 'sponsor_id' => $this->resolveSponsorId($data, $role),
                 'distributor_id' => $role === UserRole::Operator ? ($data['distributor_id'] ?? null) : null,
                 'profile_photo_path' => $photo ? $this->storePhoto($photo) : null,
@@ -47,6 +51,7 @@ final class AdminUserService
                     'name' => $name,
                     'is_main' => false,
                     'user_id' => $user->id,
+                    'pricing_region' => $data['pricing_region'] ?? DistributorPricingRegion::Luzon->value,
                 ]);
             }
 
@@ -67,6 +72,7 @@ final class AdminUserService
     public function update(User $user, array $data, ?UploadedFile $photo = null): User
     {
         return DB::transaction(function () use ($user, $data, $photo) {
+            $data = $this->normalizeNameFields($data);
             $name = User::fullNameFromParts($data['first_name'], $data['last_name'] ?? '');
             $attrs = [
                 'name' => $name,
@@ -155,5 +161,34 @@ final class AdminUserService
     private function storePhoto(UploadedFile $photo): string
     {
         return $photo->store('profile-photos', 'public');
+    }
+
+    /** @param  array<string, mixed>  $data */
+    private function normalizeNameFields(array $data): array
+    {
+        if (isset($data['name']) && empty($data['first_name'])) {
+            $parts = preg_split('/\s+/', trim((string) $data['name']), 2);
+            $data['first_name'] = $parts[0];
+            $data['last_name'] = $parts[1] ?? '';
+        }
+
+        return $data;
+    }
+
+    /** @param  array<string, mixed>  $data */
+    private function resolveOperatorPriceRegion(array $data, UserRole $role): PriceRegion
+    {
+        if ($role !== UserRole::Operator) {
+            return isset($data['region']) ? PriceRegion::from($data['region']) : PriceRegion::Luzon;
+        }
+
+        if (! empty($data['distributor_id'])) {
+            $dist = Distributor::query()->find($data['distributor_id']);
+            if ($dist) {
+                return $dist->operatorPriceRegion();
+            }
+        }
+
+        return isset($data['region']) ? PriceRegion::from($data['region']) : PriceRegion::Luzon;
     }
 }

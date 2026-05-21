@@ -8,6 +8,7 @@ use App\Services\AdminPosSalesLogService;
 use App\Services\PosSalesLogGate;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -54,9 +55,17 @@ class PosSalesLogController extends Controller
 
         $request->validate(['password' => ['required', 'string']]);
 
-        if (! $gate->attempt(auth()->user(), $request->input('password'))) {
+        $user = auth()->user();
+
+        if (! Hash::check($request->input('password'), $user->password)) {
+            if (! $gate->recordFailedAttempt($user)) {
+                return back()->withErrors(['password' => 'Too many failed attempts. Try again in '.$gate->remainingLockMinutes($user).' minutes.']);
+            }
+
             return back()->withErrors(['password' => 'Incorrect password.']);
         }
+
+        $gate->unlockSession($user);
 
         return redirect()->route('admin.pos-sales-logs.index');
     }

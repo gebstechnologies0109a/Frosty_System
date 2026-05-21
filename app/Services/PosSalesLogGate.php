@@ -3,9 +3,9 @@
 namespace App\Services;
 
 use App\Models\SecurityLog;
-use App\Models\SystemSetting;
 use App\Models\User;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Hash;
 
 final class PosSalesLogGate
 {
@@ -46,23 +46,16 @@ final class PosSalesLogGate
         return max(0, (int) ceil(($expires - now()->timestamp) / 60));
     }
 
-    public function attempt(User $user, string $password): bool
+    public function unlockSession(User $user): void
     {
-        if ($this->isLocked($user)) {
-            return false;
-        }
+        Cache::forget($this->attemptKey($user));
+        $this->unlock();
+        SecurityLog::record($user, 'pos_logs_unlocked', 'Successful POS logs access');
+    }
 
-        $expected = SystemSetting::get('pos_logs_password')
-            ?? config('frosty.pos_logs_password');
-
-        if ($expected && hash_equals((string) $expected, $password)) {
-            Cache::forget($this->attemptKey($user));
-            $this->unlock();
-            SecurityLog::record($user, 'pos_logs_unlocked', 'Successful POS logs access');
-
-            return true;
-        }
-
+    /** @return bool True if account is now locked after this failure */
+    public function recordFailedAttempt(User $user): bool
+    {
         $attempts = (int) Cache::get($this->attemptKey($user), 0) + 1;
         Cache::put($this->attemptKey($user), $attempts, now()->addMinutes(self::LOCK_MINUTES));
 
@@ -71,7 +64,26 @@ final class PosSalesLogGate
         if ($attempts >= self::MAX_ATTEMPTS) {
             Cache::put($this->lockKey($user), now()->addMinutes(self::LOCK_MINUTES)->timestamp, now()->addMinutes(self::LOCK_MINUTES));
             SecurityLog::record($user, 'pos_logs_locked', 'Account locked after failed attempts');
+
+            return true;
         }
+
+        return false;
+    }
+
+    public function attempt(User $user, string $password): bool
+    {
+        if ($this->isLocked($user)) {
+            return false;
+        }
+
+        if (Hash::check($password, $user->password)) {
+            $this->unlockSession($user);
+
+            return true;
+        }
+
+        $this->recordFailedAttempt($user);
 
         return false;
     }

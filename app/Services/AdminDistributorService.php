@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\DistributorPricingRegion;
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use App\Models\Distributor;
@@ -20,6 +21,7 @@ final class AdminDistributorService
     public function create(array $data): User
     {
         $data['role'] = UserRole::Distributor->value;
+        $data['pricing_region'] = $data['pricing_region'] ?? DistributorPricingRegion::Luzon->value;
 
         return $this->users->create($data);
     }
@@ -37,7 +39,10 @@ final class AdminDistributorService
             $distributor->update([
                 'name' => $data['name'],
                 'is_main' => (bool) ($data['is_main'] ?? false),
+                'pricing_region' => $data['pricing_region'] ?? $distributor->pricing_region?->value ?? DistributorPricingRegion::Luzon->value,
             ]);
+
+            $distributor->syncAssignedOperatorsPricingRegion();
 
             return $user->fresh();
         });

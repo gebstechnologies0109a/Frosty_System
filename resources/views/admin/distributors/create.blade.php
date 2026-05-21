@@ -7,6 +7,7 @@
         <div class="mb-3"><label class="form-label">Name</label><input name="name" class="form-control" value="{{ old('name') }}" required></div>
         <div class="mb-3"><label class="form-label">Email</label><input type="email" name="email" class="form-control" value="{{ old('email') }}" required></div>
         <div class="mb-3"><label class="form-label">Password</label><input type="password" name="password" class="form-control" required></div>
+        @include('admin.distributors._pricing_region', ['pricingRegions' => $pricingRegions, 'selected' => old('pricing_region', 'luzon')])
         <button class="btn btn-primary">Create</button>
         <a href="{{ route('admin.distributors.index') }}" class="btn btn-outline-secondary">Cancel</a>
     </form>

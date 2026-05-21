@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\DistributorPricingRegion;
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use App\Http\Controllers\Controller;
@@ -76,6 +77,7 @@ class AdminDistributorController extends Controller
             'distributor' => $distributor,
             'profile' => $distributor->distributorProfile,
             'statuses' => UserStatus::cases(),
+            'pricingRegions' => DistributorPricingRegion::cases(),
         ]);
     }
 

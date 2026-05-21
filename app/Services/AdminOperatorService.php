@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
+use App\Models\Distributor;
 use App\Models\Order;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
@@ -19,6 +20,14 @@ final class AdminOperatorService
     public function create(array $data): User
     {
         $data['role'] = UserRole::Operator->value;
+        $data = $this->normalizeNameFields($data);
+
+        if (! empty($data['distributor_id'])) {
+            $dist = Distributor::query()->find($data['distributor_id']);
+            if ($dist) {
+                $data['region'] = $dist->operatorPriceRegion()->value;
+            }
+        }
 
         return $this->users->create($data);
     }
@@ -26,12 +35,20 @@ final class AdminOperatorService
     /** @param  array<string, mixed>  $data */
     public function update(User $operator, array $data): User
     {
+        $region = $data['region'] ?? $operator->region;
+        if (! empty($data['distributor_id'])) {
+            $dist = Distributor::query()->find($data['distributor_id']);
+            if ($dist) {
+                $region = $dist->operatorPriceRegion();
+            }
+        }
+
         $operator->update([
             'name' => $data['name'],
             'email' => $data['email'],
             'distributor_id' => $data['distributor_id'] ?? null,
             'status' => $data['status'] ?? $operator->status,
-            'region' => $data['region'] ?? $operator->region,
+            'region' => $region,
         ]);
 
         return $operator->fresh();
@@ -48,6 +65,18 @@ final class AdminOperatorService
     public function resetPassword(User $operator, string $password): void
     {
         $operator->update(['password' => $password]);
+    }
+
+    /** @param  array<string, mixed>  $data */
+    private function normalizeNameFields(array $data): array
+    {
+        if (isset($data['name']) && empty($data['first_name'])) {
+            $parts = preg_split('/\s+/', trim($data['name']), 2);
+            $data['first_name'] = $parts[0];
+            $data['last_name'] = $parts[1] ?? '';
+        }
+
+        return $data;
     }
 
     public function delete(User $operator): void

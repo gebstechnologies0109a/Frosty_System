@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\DistributorPricingRegion;
+use App\Enums\PriceRegion;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -12,13 +14,32 @@ class Distributor extends Model
         'name',
         'is_main',
         'user_id',
+        'pricing_region',
     ];
 
     protected function casts(): array
     {
         return [
             'is_main' => 'boolean',
+            'pricing_region' => DistributorPricingRegion::class,
         ];
+    }
+
+    public function pricingRegion(): DistributorPricingRegion
+    {
+        return $this->pricing_region ?? DistributorPricingRegion::Luzon;
+    }
+
+    public function operatorPriceRegion(): PriceRegion
+    {
+        return $this->pricingRegion()->toPriceRegion();
+    }
+
+    public function syncAssignedOperatorsPricingRegion(): void
+    {
+        $this->assignedOperators()->update([
+            'region' => $this->operatorPriceRegion(),
+        ]);
     }
 
     public function user(): BelongsTo

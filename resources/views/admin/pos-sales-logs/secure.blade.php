@@ -9,7 +9,7 @@
                 @if ($locked)
                     <div class="alert alert-danger">Too many failed attempts. Locked for {{ $lockMinutes }} more minute(s).</div>
                 @else
-                    <p class="small text-muted">Super Admin access to full POS transaction history. Enter the POS logs password.</p>
+                    <p class="small text-muted">Super Admin access to full POS transaction history. Enter your account password to continue.</p>
                     <form method="post" action="{{ route('admin.pos-sales-logs.unlock') }}">
                         @csrf
                         <div class="mb-3">

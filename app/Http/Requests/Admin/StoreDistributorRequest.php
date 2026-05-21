@@ -2,8 +2,10 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Enums\DistributorPricingRegion;
 use App\Enums\UserRole;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 
 class StoreDistributorRequest extends FormRequest
@@ -20,6 +22,7 @@ class StoreDistributorRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', Password::defaults()],
+            'pricing_region' => ['required', Rule::enum(DistributorPricingRegion::class)],
         ];
     }
 }
