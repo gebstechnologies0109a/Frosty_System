@@ -1,4 +1,5 @@
-@extends('layouts.app')
+@extends('layouts.operator')
+@section('header_title', 'Genealogy')
 @section('title', 'Genealogy')
 @section('content')
 <h1 class="h4 mb-4">Genealogy — {{ $month }}</h1>

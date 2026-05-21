@@ -1,4 +1,5 @@
-@extends('layouts.app')
+@extends('layouts.operator')
+@section('header_title', 'Analytics')
 @section('title', 'Operator Analytics')
 @section('content')
 @php

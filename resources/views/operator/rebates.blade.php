@@ -1,4 +1,5 @@
-@extends('layouts.app')
+@extends('layouts.operator')
+@section('header_title', 'Rebates')
 @section('title', 'Rebates')
 @section('content')
 <h1 class="h4 mb-3">Rebate history</h1>

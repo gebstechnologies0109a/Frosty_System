@@ -33,6 +33,25 @@ class ApplicationHealthTest extends TestCase
             ->assertSee('Access level');
     }
 
+    public function test_operator_dashboard_mobile_layout_loads(): void
+    {
+        $distributor = Distributor::query()->create([
+            'name' => 'Test Distributor',
+            'is_main' => false,
+        ]);
+
+        $operator = User::factory()->create([
+            'role' => UserRole::Operator,
+            'distributor_id' => $distributor->id,
+        ]);
+
+        $this->actingAs($operator)
+            ->get(route('operator.dashboard'))
+            ->assertOk()
+            ->assertSee('Today at a glance')
+            ->assertSee('Inventory', false);
+    }
+
     public function test_operator_pos_page_loads_with_daily_closing_context(): void
     {
         $distributor = Distributor::query()->create([

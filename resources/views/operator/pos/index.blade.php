@@ -1,5 +1,6 @@
-@extends('layouts.app')
+@extends('layouts.operator')
 @section('title', 'Frosty POS')
+@section('header_title', 'Frosty POS')
 @push('head')
 <style>
 .pos-shell { min-height: calc(100vh - 100px); }
@@ -12,7 +13,7 @@
 .pos-qty-btn { min-width: 48px; min-height: 48px; font-size: 1.3rem; }
 .pos-checkout-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 3px solid #198754; padding: .85rem; z-index: 30; box-shadow: 0 -4px 16px rgba(0,0,0,.1); }
 @media (min-width: 992px) { .pos-checkout-bar { position: sticky; border-radius: .5rem; margin-top: 1rem; } body { padding-bottom: 0; } }
-@media (max-width: 991px) { body { padding-bottom: 88px; } }
+@media (max-width: 991px) { body.operator-shell { padding-bottom: calc(4.5rem + 88px + env(safe-area-inset-bottom, 0px)); } }
 .pos-pnl { font-size: .9rem; }
 </style>
 @endpush
@@ -24,7 +25,7 @@
             @if (! $dayLocked)
                 <button type="button" class="btn btn-warning fw-semibold" data-bs-toggle="modal" data-bs-target="#dailyClosingModal">Daily Closing</button>
             @endif
-            <a href="{{ route('operator.dashboard') }}" class="btn btn-outline-secondary">Exit</a>
+            <a href="{{ route('operator.dashboard') }}" class="btn btn-outline-secondary d-none d-md-inline-flex">Exit</a>
         </div>
     </div>
 

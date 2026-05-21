@@ -1,4 +1,5 @@
-@extends('layouts.app')
+@extends('layouts.operator')
+@section('header_title', 'Add operator')
 @section('title', 'Add Operator')
 @section('content')
 <h1 class="h4 mb-3">Add operator referral</h1>

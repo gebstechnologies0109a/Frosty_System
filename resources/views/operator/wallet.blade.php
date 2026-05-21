@@ -1,4 +1,5 @@
-@extends('layouts.app')
+@extends('layouts.operator')
+@section('header_title', 'Wallet')
 @section('title', 'Wallet')
 @section('content')
 <h1 class="h4 mb-3">Wallet — ₱{{ number_format($wallet->balance, 2) }}</h1>
