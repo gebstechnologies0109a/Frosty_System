@@ -9,7 +9,10 @@
             Regional pricing: {{ $pricingRegion->label() }} ({{ $priceRegion->value }})
         </span>
     </div>
-    <a href="{{ route('distributor.dashboard') }}" class="btn btn-outline-primary btn-sm">← Dashboard</a>
+    <div class="d-flex gap-2">
+        <a href="{{ route('distributor.inventory.adjust') }}" class="btn btn-primary btn-sm">Adjust stock</a>
+        <a href="{{ route('distributor.dashboard') }}" class="btn btn-outline-primary btn-sm">← Dashboard</a>
+    </div>
 </div>
 
 <div class="row g-4">

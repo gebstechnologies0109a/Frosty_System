@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\AdminPosDailyClosingController;
 use App\Http\Controllers\Admin\PosSalesLogController;
 use App\Http\Controllers\Admin\PurchasingAnalyticsController;
 use App\Http\Controllers\Admin\PurchasingProductController;
+use App\Http\Controllers\Admin\AdminStockLogController;
 use App\Http\Controllers\Admin\StockMovementController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\AdminPageBuilderController;
@@ -71,6 +72,8 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
             Route::patch('/products/{product}/toggle-status', [PurchasingProductController::class, 'toggleStatus'])->name('products.toggle-status');
 
             Route::middleware('role:purchasing_admin,super_admin')->group(function () {
+                Route::post('/stock-logs/{stockLog}/approve', [AdminStockLogController::class, 'approve'])->name('stock-logs.approve');
+                Route::post('/stock-logs/{stockLog}/reject', [AdminStockLogController::class, 'reject'])->name('stock-logs.reject');
                 Route::get('/analytics', [PurchasingAnalyticsController::class, 'index'])->name('analytics');
                 Route::get('/products/export', [PurchasingProductController::class, 'export'])->name('products.export');
                 Route::get('/products/import-template', [PurchasingProductController::class, 'importTemplate'])->name('products.import-template');
@@ -197,6 +200,8 @@ Route::middleware(['auth', 'role:distributor'])->prefix('distributor')->name('di
     Route::get('/analytics', [DistributorAnalyticsController::class, 'index'])->name('analytics');
     Route::get('/orders', [DistributorOrderController::class, 'index'])->name('orders.index');
     Route::get('/inventory', [DistributorInventoryController::class, 'index'])->name('inventory.index');
+    Route::get('/inventory/adjust', [DistributorInventoryController::class, 'adjust'])->name('inventory.adjust');
+    Route::post('/inventory/adjust', [DistributorInventoryController::class, 'storeAdjustment'])->name('inventory.adjust.store');
     Route::get('/orders/create', [DistributorOrderController::class, 'createFromMain'])->name('orders.create');
     Route::post('/orders', [DistributorOrderController::class, 'storeFromMain'])->name('orders.store');
     Route::post('/orders/{order}/approve', [DistributorOrderController::class, 'approve'])->name('orders.approve');

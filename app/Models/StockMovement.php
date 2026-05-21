@@ -29,6 +29,8 @@ class StockMovement extends Model
 
     public const ACTION_POS_SALE = 'pos_sale';
 
+    public const ACTION_DISTRIBUTOR_ADJUSTMENT = 'distributor_inventory_adjustment';
+
     /** @var list<string> */
     public const ACTION_TYPES = [
         self::ACTION_BULK_INCREASE,
@@ -41,6 +43,7 @@ class StockMovement extends Model
         self::ACTION_RESTOCK,
         self::ACTION_IMPORT_ADJUSTMENT,
         self::ACTION_OPERATOR_MANUAL,
+        self::ACTION_DISTRIBUTOR_ADJUSTMENT,
     ];
 
     protected $fillable = [
@@ -86,6 +89,7 @@ class StockMovement extends Model
             self::ACTION_IMPORT_ADJUSTMENT => 'Import adjustment',
             self::ACTION_OPERATOR_MANUAL => 'Operator inventory adjustment',
             self::ACTION_POS_SALE => 'POS sale',
+            self::ACTION_DISTRIBUTOR_ADJUSTMENT => 'Distributor inventory adjustment',
             default => ucfirst(str_replace('_', ' ', $this->action_type)),
         };
     }
