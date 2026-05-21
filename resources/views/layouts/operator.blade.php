@@ -75,7 +75,11 @@
             </div>
         </aside>
         <div class="col-lg-9">
-            <div id="ptr-indicator"><i class="fa-solid fa-rotate me-1"></i> Pull to refresh</div>
+            @if ($ptrEnabled)
+            <div id="ptr-indicator" class="ptr-indicator" role="status" aria-live="polite" aria-hidden="true">
+                <i class="fa-solid fa-rotate me-1"></i> Pull to refresh
+            </div>
+            @endif
             <div id="ptr-scroll">
                 @if (session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
                 @if ($errors->any())<div class="alert alert-danger"><ul class="mb-0">@foreach ($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul></div>@endif

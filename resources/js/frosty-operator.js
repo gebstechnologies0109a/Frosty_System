@@ -53,6 +53,10 @@
             },
             { passive: true },
         );
+        const setVisible = (visible) => {
+            indicator.classList.toggle('ptr-visible', visible);
+            indicator.setAttribute('aria-hidden', visible ? 'false' : 'true');
+        };
         ptr.addEventListener(
             'touchmove',
             (e) => {
@@ -60,7 +64,7 @@
                     return;
                 }
                 const dy = e.touches[0].clientY - startY;
-                indicator.classList.toggle('ptr-visible', dy > 50);
+                setVisible(dy > 50);
             },
             { passive: true },
         );
@@ -68,7 +72,7 @@
             if (indicator.classList.contains('ptr-visible')) {
                 window.location.reload();
             }
-            indicator.classList.remove('ptr-visible');
+            setVisible(false);
             pulling = false;
         });
     }
