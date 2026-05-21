@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Operator;
 
+use App\Enums\PriceRegion;
 use App\Http\Controllers\Controller;
+use App\Models\Distributor;
 use App\Models\Product;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -17,7 +19,7 @@ class OperatorProductController extends Controller
             return response()->json([]);
         }
 
-        $region = $request->user()->priceRegion();
+        $region = $this->priceRegionForSearch($request);
 
         $products = Product::query()
             ->active()
@@ -48,5 +50,18 @@ class OperatorProductController extends Controller
                 ];
             })->values()->all(),
         );
+    }
+
+    private function priceRegionForSearch(Request $request): PriceRegion
+    {
+        if ($request->filled('distributor_id')) {
+            $distributor = Distributor::query()->find($request->integer('distributor_id'));
+
+            if ($distributor) {
+                return $distributor->operatorPriceRegion();
+            }
+        }
+
+        return $request->user()->priceRegion();
     }
 }

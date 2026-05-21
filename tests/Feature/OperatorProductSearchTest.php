@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\DistributorPricingRegion;
 use App\Enums\PriceRegion;
 use App\Enums\ProductCategory;
 use App\Enums\UserRole;
@@ -163,5 +164,111 @@ class OperatorProductSearchTest extends TestCase
     {
         $this->getJson(route('operator.products.search', ['q' => 'choco']))
             ->assertUnauthorized();
+    }
+
+    public function test_search_uses_selected_distributor_pricing_region(): void
+    {
+        $operator = $this->operatorUser();
+        $mindanao = Distributor::query()->create([
+            'name' => 'General Santos City',
+            'is_main' => false,
+            'pricing_region' => DistributorPricingRegion::Mindanao,
+        ]);
+
+        $product = Product::query()->create([
+            'name' => 'Vanilla Softserve Powder 1kg',
+            'category' => ProductCategory::Softserve,
+            'points' => 2,
+            'status' => 'active',
+        ]);
+
+        ProductPrice::query()->create([
+            'product_id' => $product->id,
+            'region' => PriceRegion::Luzon,
+            'price' => 228.00,
+        ]);
+        ProductPrice::query()->create([
+            'product_id' => $product->id,
+            'region' => PriceRegion::Davao,
+            'price' => 198.50,
+        ]);
+
+        $this->actingAs($operator)
+            ->getJson(route('operator.products.search', [
+                'q' => 'vanilla',
+                'distributor_id' => $mindanao->id,
+            ]))
+            ->assertOk()
+            ->assertJsonFragment([
+                'id' => $product->id,
+                'price' => 198.5,
+            ]);
+
+        $this->actingAs($operator)
+            ->getJson(route('operator.products.search', ['q' => 'vanilla']))
+            ->assertOk()
+            ->assertJsonFragment([
+                'id' => $product->id,
+                'price' => 228.0,
+            ]);
+    }
+
+    public function test_operator_order_uses_distributor_price_region(): void
+    {
+        $operator = $this->operatorUser();
+        $mindanao = Distributor::query()->create([
+            'name' => 'General Santos City',
+            'is_main' => false,
+            'pricing_region' => DistributorPricingRegion::Mindanao,
+        ]);
+
+        $product = Product::query()->create([
+            'name' => 'Vanilla Softserve Powder 1kg',
+            'category' => ProductCategory::Softserve,
+            'points' => 2,
+            'status' => 'active',
+        ]);
+
+        foreach (PriceRegion::cases() as $region) {
+            ProductPrice::query()->create([
+                'product_id' => $product->id,
+                'region' => $region,
+                'price' => $region === PriceRegion::Davao ? 198.50 : 228.00,
+            ]);
+        }
+
+        $this->actingAs($operator)
+            ->post(route('operator.orders.store'), [
+                'distributor_id' => $mindanao->id,
+                'items' => [['product_id' => $product->id, 'qty' => 1]],
+            ])
+            ->assertRedirect(route('operator.orders.index'));
+
+        $this->assertDatabaseHas('orders', [
+            'user_id' => $operator->id,
+            'distributor_id' => $mindanao->id,
+            'price_region' => PriceRegion::Davao->value,
+        ]);
+        $this->assertDatabaseHas('order_items', [
+            'product_id' => $product->id,
+            'price' => 198.50,
+        ]);
+    }
+
+    public function test_operator_create_includes_distributor_region_labels(): void
+    {
+        $operator = $this->operatorUser();
+        $mindanao = Distributor::query()->create([
+            'name' => 'General Santos City',
+            'is_main' => false,
+            'pricing_region' => DistributorPricingRegion::Mindanao,
+        ]);
+
+        $this->actingAs($operator)
+            ->get(route('operator.orders.create'))
+            ->assertOk()
+            ->assertSee('id="distributor-select"', false)
+            ->assertSee('id="pricing-region-label"', false)
+            ->assertSee('"'.$mindanao->id.'":"Mindanao"', false);
     }
 }

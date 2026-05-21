@@ -1,12 +1,18 @@
 @php
     $priceRegion = auth()->user()->priceRegion();
+    $distributorRegionLabels = ! empty($distributors)
+        ? $distributors->mapWithKeys(fn ($d) => [$d->id => $d->pricingRegion()->label()])->all()
+        : [];
+    $pricingRegionLabel = ! empty($distributors)
+        ? ($distributors->first()->pricingRegion()->label())
+        : $priceRegion->label();
 @endphp
 <form method="post" action="{{ $action }}" id="order-form" @if(!empty($showPaymentProof)) enctype="multipart/form-data" @endif>
     @csrf
     @if (!empty($distributors))
         <div class="mb-3">
             <label class="form-label">Distributor / Main</label>
-            <select name="distributor_id" class="form-select" required>
+            <select name="distributor_id" id="distributor-select" class="form-select" required>
                 @foreach ($distributors as $d)
                     <option value="{{ $d->id }}">
                         {{ $d->name }}@if($d->is_main) (Main — Purchasing)@endif
@@ -15,7 +21,7 @@
             </select>
         </div>
     @endif
-    <p class="small text-muted mb-2">Pricing region: <strong>{{ $priceRegion->label() }}</strong></p>
+    <p class="small text-muted mb-2">Pricing region: <strong id="pricing-region-label">{{ $pricingRegionLabel }}</strong></p>
 
     @if (!empty($useProductSearch))
         <div class="mb-2 small text-muted">Search products by name (type at least 2 characters).</div>
@@ -101,9 +107,43 @@
     <script>
     (function () {
         const searchUrl = @json($productSearchUrl);
+        const distributorRegionLabels = @json($distributorRegionLabels ?? []);
+        const distributorSelect = document.getElementById('distributor-select');
+        const pricingRegionLabel = document.getElementById('pricing-region-label');
         const linesEl = document.getElementById('lines');
         const template = document.getElementById('product-line-template');
         let lineIndex = 0;
+
+        function selectedDistributorId() {
+            return distributorSelect ? distributorSelect.value : '';
+        }
+
+        function updatePricingRegionLabel() {
+            if (!pricingRegionLabel || !distributorSelect) return;
+            const label = distributorRegionLabels[distributorSelect.value];
+            if (label) pricingRegionLabel.textContent = label;
+        }
+
+        function clearLineProducts() {
+            linesEl.querySelectorAll('.line-row').forEach((row) => {
+                const hidden = row.querySelector('.product-id-input');
+                const searchInput = row.querySelector('.product-search-input');
+                const selected = row.querySelector('.product-selected');
+                if (hidden) hidden.value = '';
+                if (searchInput) {
+                    searchInput.value = '';
+                    delete searchInput.dataset.selectedName;
+                }
+                if (selected) selected.classList.add('d-none');
+            });
+        }
+
+        if (distributorSelect) {
+            distributorSelect.addEventListener('change', () => {
+                updatePricingRegionLabel();
+                clearLineProducts();
+            });
+        }
 
         function debounce(fn, ms) {
             let t;
@@ -140,7 +180,10 @@
                     return;
                 }
                 try {
-                    const res = await fetch(`${searchUrl}?q=${encodeURIComponent(q)}`, {
+                    const params = new URLSearchParams({ q });
+                    const distributorId = selectedDistributorId();
+                    if (distributorId) params.set('distributor_id', distributorId);
+                    const res = await fetch(`${searchUrl}?${params}`, {
                         headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
                         credentials: 'same-origin',
                     });

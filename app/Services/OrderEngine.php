@@ -37,7 +37,9 @@ final class OrderEngine
             ? OrderSource::Distributor
             : OrderSource::Operator;
 
-        $priceRegion = $user->priceRegion();
+        $priceRegion = $source === OrderSource::Operator
+            ? $distributor->operatorPriceRegion()
+            : $user->priceRegion();
 
         return DB::transaction(function () use ($user, $items, $distributorId, $source, $priceRegion, $paymentProofPath) {
             $order = Order::query()->create([

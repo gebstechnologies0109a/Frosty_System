@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Operator;
 
+use App\Enums\PriceRegion;
 use App\Http\Controllers\Controller;
 use App\Models\Distributor;
 use App\Models\Product;
@@ -46,7 +47,8 @@ class OrderController extends Controller
 
         /** @var User $user */
         $user = Auth::user();
-        $items = $this->validateOrderItems($validated['items'], $user);
+        $distributor = Distributor::query()->findOrFail($validated['distributor_id']);
+        $items = $this->validateOrderItems($validated['items'], $distributor->operatorPriceRegion());
 
         $proofPath = null;
         if ($request->hasFile('payment_proof')) {
@@ -62,9 +64,8 @@ class OrderController extends Controller
      * @param  array<int, array{product_id: mixed, qty: mixed}>  $items
      * @return array<int, array{product_id: int, qty: int}>
      */
-    private function validateOrderItems(array $items, User $user): array
+    private function validateOrderItems(array $items, PriceRegion $region): array
     {
-        $region = $user->priceRegion();
         $validated = [];
 
         foreach ($items as $index => $row) {
