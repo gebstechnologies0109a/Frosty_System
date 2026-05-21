@@ -222,6 +222,11 @@ Route::middleware(['auth', 'role:operator'])->prefix('operator')->name('operator
     Route::get('/orders', [OperatorOrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/create', [OperatorOrderController::class, 'create'])->name('orders.create');
     Route::post('/orders', [OperatorOrderController::class, 'store'])->name('orders.store');
+    Route::get('/orders/{order}', [OperatorOrderController::class, 'show'])->whereNumber('order')->name('orders.show');
+    Route::get('/orders/{order}/edit', [OperatorOrderController::class, 'edit'])->whereNumber('order')->name('orders.edit');
+    Route::put('/orders/{order}', [OperatorOrderController::class, 'update'])->whereNumber('order')->name('orders.update');
+    Route::post('/orders/{order}/payment-proof', [OperatorOrderController::class, 'uploadPaymentProof'])->whereNumber('order')->name('orders.payment-proof');
+    Route::post('/orders/{order}/resubmit', [OperatorOrderController::class, 'resubmit'])->whereNumber('order')->name('orders.resubmit');
     Route::get('/referrals/create', [ReferralController::class, 'create'])->name('referrals.create');
     Route::post('/referrals', [ReferralController::class, 'store'])->name('referrals.store');
     Route::get('/genealogy', GenealogyController::class)->name('genealogy');

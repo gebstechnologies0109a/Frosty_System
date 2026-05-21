@@ -21,6 +21,7 @@ class Order extends Model
         'total_amount',
         'payment_method',
         'payment_proof_path',
+        'notes',
         'total_points',
         'cogs_total',
         'gross_profit',
