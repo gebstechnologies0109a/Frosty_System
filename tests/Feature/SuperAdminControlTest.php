@@ -83,7 +83,9 @@ class SuperAdminControlTest extends TestCase
         $this->actingAs($admin)
             ->get(route('admin.page-builder.index'))
             ->assertOk()
-            ->assertSee('Page Builder');
+            ->assertSee('Page Builder')
+            ->assertSee('All pages')
+            ->assertSee('Layout blocks');
 
         $this->actingAs($admin)
             ->post(route('admin.page-builder.store'), [
@@ -108,6 +110,18 @@ class SuperAdminControlTest extends TestCase
             ->get(route('admin.page-builder.preview', $page))
             ->assertOk()
             ->assertSee('Hello builder');
+
+        $this->actingAs($admin)
+            ->put(route('admin.page-builder.update', $page), [
+                'title' => 'Test Page Updated',
+                'slug' => 'test-page',
+                'layout_json' => json_encode(['blocks' => [['id' => '1', 'type' => 'text', 'content' => 'Done']]]),
+                'finish' => '1',
+            ])
+            ->assertRedirect(route('admin.page-builder.index'))
+            ->assertSessionHas('success');
+
+        $this->assertSame('Test Page Updated', $page->fresh()->title);
     }
 
     public function test_non_super_admin_cannot_access_page_builder(): void

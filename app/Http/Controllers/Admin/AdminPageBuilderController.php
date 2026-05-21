@@ -16,7 +16,11 @@ class AdminPageBuilderController extends Controller
     public function index(): View
     {
         return view('admin.page-builder.index', [
-            'pages' => AdminPage::query()->orderByDesc('updated_at')->paginate(20),
+            'pages' => AdminPage::query()
+                ->orderBy('sort_order')
+                ->orderBy('title')
+                ->get(),
+            'blockTypes' => AdminPage::BLOCK_TYPES,
         ]);
     }
 
@@ -55,7 +59,27 @@ class AdminPageBuilderController extends Controller
     {
         $page->update($this->validated($request, $page));
 
-        return back()->with('success', 'Page saved.');
+        if ($request->boolean('finish')) {
+            return redirect()
+                ->route('admin.page-builder.index')
+                ->with('success', 'Page "'.$page->title.'" saved and finalized.');
+        }
+
+        return back()->with('success', 'Page saved. Continue editing or use Save & return to list when done.');
+    }
+
+    public function reorder(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'order' => ['required', 'array'],
+            'order.*' => ['integer', 'exists:admin_pages,id'],
+        ]);
+
+        foreach ($validated['order'] as $position => $pageId) {
+            AdminPage::query()->whereKey($pageId)->update(['sort_order' => $position + 1]);
+        }
+
+        return back()->with('success', 'Page order updated.');
     }
 
     public function destroy(AdminPage $page): RedirectResponse

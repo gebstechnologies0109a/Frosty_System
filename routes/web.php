@@ -130,6 +130,7 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
             Route::get('/users/{user}/related', [AdminUserController::class, 'relatedData'])->name('users.related');
 
             Route::get('/page-builder', [AdminPageBuilderController::class, 'index'])->name('page-builder.index');
+            Route::post('/page-builder/reorder', [AdminPageBuilderController::class, 'reorder'])->name('page-builder.reorder');
             Route::get('/page-builder/create', [AdminPageBuilderController::class, 'create'])->name('page-builder.create');
             Route::post('/page-builder', [AdminPageBuilderController::class, 'store'])->name('page-builder.store');
             Route::get('/page-builder/{page}/edit', [AdminPageBuilderController::class, 'edit'])->name('page-builder.edit');

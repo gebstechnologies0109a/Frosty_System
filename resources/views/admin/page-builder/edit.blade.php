@@ -3,9 +3,25 @@
 @section('content')
 @include('admin.partials.page-header', [
     'title' => $isNew ? 'New Page' : 'Edit: '.$page->title,
-    'subtitle' => 'Drag blocks to reorder',
-    'actions' => $isNew ? '' : '<a href="'.route('admin.page-builder.preview', $page).'" class="btn btn-outline-secondary">Preview</a>',
+    'subtitle' => $isNew ? 'Set title and slug, add blocks, then save' : 'Position on site: /p/'.$page->slug.' — drag blocks to set layout order',
+    'actions' => '<a href="'.route('admin.page-builder.index').'" class="btn btn-outline-secondary">← All pages</a>'
+        .($isNew ? '' : ' <a href="'.route('admin.page-builder.preview', $page).'" class="btn btn-outline-secondary">Preview</a>'),
 ])
+
+@if (! $isNew && $page->blockCount() > 0)
+<div class="card border-0 shadow-sm mb-3">
+    <div class="card-body py-2">
+        <div class="small text-muted mb-1">Current layout on this page</div>
+        <div class="d-flex flex-wrap gap-2">
+            @foreach ($page->layoutOutline() as $block)
+                <span class="badge text-bg-light border text-dark" title="{{ $block['function'] }}">
+                    {{ $block['position'] }}. {{ $block['label'] }}
+                </span>
+            @endforeach
+        </div>
+    </div>
+</div>
+@endif
 <form id="pageForm" method="post" action="{{ $isNew ? route('admin.page-builder.store') : route('admin.page-builder.update', $page) }}">
     @csrf
     @if (! $isNew) @method('PUT') @endif
@@ -32,9 +48,16 @@
         </div>
         <div class="col-lg-8">
             <div class="card border-0 shadow-sm">
-                <div class="card-header fw-semibold d-flex justify-content-between">
-                    <span>Layout</span>
-                    <button type="submit" class="btn btn-primary btn-sm">Save page</button>
+                <div class="card-header fw-semibold d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <span>Layout builder <span class="text-muted fw-normal small">(top = position 1 on page)</span></span>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-outline-primary btn-sm">Save</button>
+                        @if (! $isNew)
+                            <button type="submit" name="finish" value="1" class="btn btn-primary btn-sm">Save & return to list</button>
+                        @else
+                            <button type="submit" class="btn btn-primary btn-sm">Save page</button>
+                        @endif
+                    </div>
                 </div>
                 <div class="card-body">
                     <div id="blocksCanvas" class="vstack gap-2 min-vh-25"></div>
