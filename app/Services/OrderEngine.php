@@ -13,6 +13,7 @@ use App\Models\OrderItem;
 use App\Models\PointsLedger;
 use App\Models\Product;
 use App\Models\User;
+use App\Exceptions\PaymentProofRequiredException;
 use App\Support\FrostySettings;
 use Illuminate\Support\Facades\DB;
 
@@ -28,7 +29,7 @@ final class OrderEngine
     /**
      * @param  array<int, array{product_id: int, qty: int}>  $items
      */
-    public function create(User $user, array $items, int $distributorId): Order
+    public function create(User $user, array $items, int $distributorId, ?string $paymentProofPath = null): Order
     {
         $distributor = Distributor::query()->findOrFail($distributorId);
 
@@ -38,7 +39,7 @@ final class OrderEngine
 
         $priceRegion = $user->priceRegion();
 
-        return DB::transaction(function () use ($user, $items, $distributorId, $source, $priceRegion) {
+        return DB::transaction(function () use ($user, $items, $distributorId, $source, $priceRegion, $paymentProofPath) {
             $order = Order::query()->create([
                 'user_id' => $user->id,
                 'distributor_id' => $distributorId,
@@ -47,6 +48,7 @@ final class OrderEngine
                 'total_points' => 0,
                 'source' => $source,
                 'price_region' => $priceRegion,
+                'payment_proof_path' => $paymentProofPath,
             ]);
 
             $totalAmount = 0;
@@ -92,6 +94,7 @@ final class OrderEngine
         }
 
         $this->assertCanApprove($order, $actor);
+        $this->assertPaymentProofPresent($order);
 
         return DB::transaction(function () use ($order, $actor) {
             $order->update([
@@ -184,5 +187,12 @@ final class OrderEngine
         }
 
         throw new \RuntimeException('You cannot approve this order.');
+    }
+
+    private function assertPaymentProofPresent(Order $order): void
+    {
+        if ($order->requiresPaymentProof() && ! $order->hasPaymentProof()) {
+            throw new PaymentProofRequiredException;
+        }
     }
 }

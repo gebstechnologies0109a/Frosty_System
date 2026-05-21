@@ -20,6 +20,7 @@ class Order extends Model
         'status',
         'total_amount',
         'payment_method',
+        'payment_proof_path',
         'total_points',
         'cogs_total',
         'gross_profit',
@@ -101,5 +102,34 @@ class Order extends Model
     public function isPos(): bool
     {
         return $this->order_type === OrderType::Pos;
+    }
+
+    public function requiresPaymentProof(): bool
+    {
+        if ($this->isPos()) {
+            return false;
+        }
+
+        return (bool) config('frosty.require_payment_proof', true);
+    }
+
+    public function hasPaymentProof(): bool
+    {
+        return filled($this->payment_proof_path);
+    }
+
+    public function paymentProofUrl(): ?string
+    {
+        return app(\App\Services\OrderPaymentProofService::class)->url($this->payment_proof_path);
+    }
+
+    public function paymentProofIsPdf(): bool
+    {
+        return app(\App\Services\OrderPaymentProofService::class)->isPdf($this->payment_proof_path);
+    }
+
+    public function paymentProofIsImage(): bool
+    {
+        return app(\App\Services\OrderPaymentProofService::class)->isImage($this->payment_proof_path);
     }
 }

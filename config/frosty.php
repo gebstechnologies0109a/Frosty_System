@@ -12,4 +12,5 @@ return [
     'max_genealogy_depth' => 4,
     'main_distributor_id' => 1,
     'pos_logs_password' => env('FROSTY_POS_LOGS_PASSWORD', 'frosty-pos-logs'),
+    'require_payment_proof' => (bool) env('FROSTY_REQUIRE_PAYMENT_PROOF', true),
 ];

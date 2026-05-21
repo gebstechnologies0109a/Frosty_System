@@ -100,6 +100,7 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
         Route::middleware('role:super_admin,purchasing_admin')->group(function () {
             Route::get('/orders', [AdminOrderController::class, 'index'])->name('orders.index');
             Route::get('/orders/{order}', [AdminOrderController::class, 'show'])->whereNumber('order')->name('orders.show');
+            Route::get('/orders/{order}/payment-proof', [AdminOrderController::class, 'downloadPaymentProof'])->whereNumber('order')->name('orders.payment-proof');
             Route::patch('/orders/{order}/status', [AdminOrderController::class, 'updateStatus'])->whereNumber('order')->name('orders.update-status');
             Route::post('/orders/{order}/approve', [AdminOrderController::class, 'approve'])->whereNumber('order')->name('orders.approve');
             Route::post('/orders/{order}/reject', [AdminOrderController::class, 'reject'])->whereNumber('order')->name('orders.reject');

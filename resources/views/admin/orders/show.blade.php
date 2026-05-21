@@ -105,6 +105,63 @@
 </div>
 
 <div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white fw-semibold">Proof of payment</div>
+    <div class="card-body">
+        @if ($paymentProofUrl)
+            <div class="d-flex flex-wrap align-items-start gap-3">
+                @if ($order->paymentProofIsImage())
+                    <img src="{{ $paymentProofUrl }}" alt="Payment proof" class="rounded border shadow-sm"
+                         style="max-width:160px;max-height:160px;object-fit:cover;cursor:pointer"
+                         data-bs-toggle="modal" data-bs-target="#paymentProofModal">
+                @else
+                    <div class="d-flex align-items-center justify-content-center rounded border bg-light text-danger"
+                         style="width:160px;height:160px">
+                        <div class="text-center small">
+                            <div class="fs-2">PDF</div>
+                            <div>Document</div>
+                        </div>
+                    </div>
+                @endif
+                <div class="d-flex flex-column gap-2">
+                    @if ($order->paymentProofIsImage())
+                        <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#paymentProofModal">
+                            View full image
+                        </button>
+                    @else
+                        <a href="{{ $paymentProofUrl }}" target="_blank" rel="noopener" class="btn btn-outline-primary btn-sm">Open PDF</a>
+                    @endif
+                    <a href="{{ route('admin.orders.payment-proof', $order) }}" class="btn btn-outline-secondary btn-sm">Download proof</a>
+                </div>
+            </div>
+            @if ($order->paymentProofIsImage())
+            <div class="modal fade" id="paymentProofModal" tabindex="-1" aria-labelledby="paymentProofModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="paymentProofModalLabel">Proof of payment — Order #{{ $order->id }}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body text-center p-0">
+                            <img src="{{ $paymentProofUrl }}" alt="Payment proof" class="img-fluid">
+                        </div>
+                        <div class="modal-footer">
+                            <a href="{{ route('admin.orders.payment-proof', $order) }}" class="btn btn-secondary btn-sm">Download</a>
+                            <button type="button" class="btn btn-primary btn-sm" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endif
+        @else
+            <p class="text-muted mb-0">No proof of payment submitted.</p>
+            @if ($order->requiresPaymentProof() && $order->status === \App\Enums\OrderStatus::Pending)
+                <p class="small text-warning mb-0 mt-2">Approval is blocked until proof is uploaded.</p>
+            @endif
+        @endif
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm mb-4">
     <div class="card-header bg-white fw-semibold">Order items ({{ $order->items->count() }})</div>
     <div class="table-responsive">
         <table class="table table-sm table-hover mb-0 align-middle">

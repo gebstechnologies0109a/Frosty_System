@@ -3,14 +3,18 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Enums\OrderStatus;
+use App\Exceptions\PaymentProofRequiredException;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Services\OrderEngine;
+use App\Services\OrderPaymentProofService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Throwable;
 
 class OrderController extends Controller
@@ -43,6 +47,7 @@ class OrderController extends Controller
 
             return view('admin.orders.show', [
                 'order' => $order,
+                'paymentProofUrl' => $order->paymentProofUrl(),
                 'backUrl' => $order->status === OrderStatus::Pending
                     ? route('admin.orders.pending')
                     : route('admin.orders.index'),
@@ -55,6 +60,19 @@ class OrderController extends Controller
 
             abort(500, 'Unable to load order details. Please try again or contact support.');
         }
+    }
+
+    public function downloadPaymentProof(Order $order, OrderPaymentProofService $proofs): StreamedResponse
+    {
+        abort_unless(
+            $order->payment_proof_path && Storage::disk(OrderPaymentProofService::DISK)->exists($order->payment_proof_path),
+            404,
+        );
+
+        return Storage::disk(OrderPaymentProofService::DISK)->download(
+            $order->payment_proof_path,
+            $proofs->downloadFilename($order->id, $order->payment_proof_path),
+        );
     }
 
     public function updateStatus(Request $request, Order $order, OrderEngine $engine): RedirectResponse
@@ -71,12 +89,16 @@ class OrderController extends Controller
         $status = OrderStatus::from($request->input('status'));
         $user = $request->user();
 
-        match ($status) {
-            OrderStatus::Approved => $engine->approve($order, $user),
-            OrderStatus::Rejected => $engine->reject($order, $user),
-            OrderStatus::Completed => $engine->complete($order, $user),
-            default => null,
-        };
+        try {
+            match ($status) {
+                OrderStatus::Approved => $engine->approve($order, $user),
+                OrderStatus::Rejected => $engine->reject($order, $user),
+                OrderStatus::Completed => $engine->complete($order, $user),
+                default => null,
+            };
+        } catch (PaymentProofRequiredException $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         return redirect()
             ->route('admin.orders.show', $order)
@@ -85,7 +107,11 @@ class OrderController extends Controller
 
     public function approve(Request $request, Order $order, OrderEngine $engine): RedirectResponse
     {
-        $engine->approve($order, $request->user());
+        try {
+            $engine->approve($order, $request->user());
+        } catch (PaymentProofRequiredException $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         return back()->with('success', 'Order approved; rebates processed.');
     }

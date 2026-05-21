@@ -3,5 +3,11 @@
 @section('title', 'New Order')
 @section('content')
 <h1 class="h4 mb-3">Operator order</h1>
-@include('partials.order-form', ['action' => route('operator.orders.store'), 'products' => $products, 'showDistributor' => true, 'distributors' => $distributors])
+@include('partials.order-form', [
+    'action' => route('operator.orders.store'),
+    'products' => $products,
+    'showDistributor' => true,
+    'distributors' => $distributors,
+    'showPaymentProof' => true,
+])
 @endsection

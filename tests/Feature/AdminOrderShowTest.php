@@ -117,9 +117,23 @@ class AdminOrderShowTest extends TestCase
         $order = $this->createOrder(OrderStatus::Pending);
 
         $this->actingAs($admin)
-            ->post(route('admin.orders.reject', $order))
+            ->post(route('admin.orders.approve', $order))
+            ->assertRedirect()
+            ->assertSessionHas('error');
+
+        $order->update(['payment_proof_path' => 'order_payments/test-proof.jpg']);
+
+        $this->actingAs($admin)
+            ->post(route('admin.orders.approve', $order))
             ->assertRedirect();
 
-        $this->assertSame(OrderStatus::Rejected, $order->fresh()->status);
+        $this->assertSame(OrderStatus::Approved, $order->fresh()->status);
+
+        $order2 = $this->createOrder(OrderStatus::Pending);
+        $this->actingAs($admin)
+            ->post(route('admin.orders.reject', $order2))
+            ->assertRedirect();
+
+        $this->assertSame(OrderStatus::Rejected, $order2->fresh()->status);
     }
 }

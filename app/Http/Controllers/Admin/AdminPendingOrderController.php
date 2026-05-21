@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Enums\OrderStatus;
+use App\Exceptions\PaymentProofRequiredException;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Services\OrderEngine;
@@ -57,12 +58,16 @@ class AdminPendingOrderController extends Controller
         $engine = app(OrderEngine::class);
         $user = $request->user();
 
-        match ($status) {
-            OrderStatus::Approved => $engine->approve($order, $user),
-            OrderStatus::Rejected => $engine->reject($order, $user),
-            OrderStatus::Completed => $engine->complete($order, $user),
-            default => null,
-        };
+        try {
+            match ($status) {
+                OrderStatus::Approved => $engine->approve($order, $user),
+                OrderStatus::Rejected => $engine->reject($order, $user),
+                OrderStatus::Completed => $engine->complete($order, $user),
+                default => null,
+            };
+        } catch (PaymentProofRequiredException $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         return redirect()
             ->route('admin.orders.pending')
@@ -71,7 +76,11 @@ class AdminPendingOrderController extends Controller
 
     public function approve(Request $request, Order $order, OrderEngine $engine): RedirectResponse
     {
-        $engine->approve($order, $request->user());
+        try {
+            $engine->approve($order, $request->user());
+        } catch (PaymentProofRequiredException $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         return back()->with('success', 'Order approved.');
     }

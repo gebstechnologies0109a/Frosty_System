@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Distributor;
 use App\Models\Product;
 use App\Services\OrderEngine;
+use App\Services\OrderPaymentProofService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -28,16 +29,22 @@ class OrderController extends Controller
         ]);
     }
 
-    public function store(Request $request, OrderEngine $engine): RedirectResponse
+    public function store(Request $request, OrderEngine $engine, OrderPaymentProofService $proofs): RedirectResponse
     {
         $validated = $request->validate([
             'distributor_id' => ['required', 'exists:distributors,id'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.product_id' => ['required', 'exists:products,id'],
             'items.*.qty' => ['required', 'integer', 'min:1'],
+            'payment_proof' => ['nullable', 'file', 'mimes:jpg,jpeg,png,heic,pdf', 'max:5120'],
         ]);
 
-        $engine->create(Auth::user(), $validated['items'], (int) $validated['distributor_id']);
+        $proofPath = null;
+        if ($request->hasFile('payment_proof')) {
+            $proofPath = $proofs->store($request->file('payment_proof'));
+        }
+
+        $engine->create(Auth::user(), $validated['items'], (int) $validated['distributor_id'], $proofPath);
 
         return redirect()->route('operator.orders.index')->with('success', 'Order submitted.');
     }

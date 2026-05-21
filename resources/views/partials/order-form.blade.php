@@ -1,7 +1,7 @@
 @php
     $priceRegion = auth()->user()->priceRegion();
 @endphp
-<form method="post" action="{{ $action }}" id="order-form">
+<form method="post" action="{{ $action }}" id="order-form" @if(!empty($showPaymentProof)) enctype="multipart/form-data" @endif>
     @csrf
     @if (!empty($distributors))
         <div class="mb-3">
@@ -33,6 +33,15 @@
         </div>
     </div>
     <button type="button" class="btn btn-outline-secondary btn-sm mb-3" onclick="addLine()">+ Add line</button>
+    @if (!empty($showPaymentProof))
+        <div class="mb-3">
+            <label class="form-label" for="payment_proof">Upload Proof of Payment</label>
+            <input type="file" name="payment_proof" id="payment_proof" class="form-control"
+                   accept="image/*,application/pdf">
+            <div class="form-text">JPG, PNG, HEIC, or PDF. Max 5 MB. Optional at submit; required before admin approval.</div>
+            @error('payment_proof')<div class="text-danger small">{{ $message }}</div>@enderror
+        </div>
+    @endif
     <p class="small text-muted">Softserve: 2 points (₱2 rebate per unit). All other categories: 0 points.</p>
     <button class="btn btn-primary">Submit order</button>
 </form>
