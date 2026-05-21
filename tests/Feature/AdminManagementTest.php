@@ -93,6 +93,10 @@ class AdminManagementTest extends TestCase
 
         $this->actingAs($admin)
             ->get(route('admin.orders.pending.show', $order))
+            ->assertRedirect(route('admin.orders.show', $order));
+
+        $this->actingAs($admin)
+            ->get(route('admin.orders.show', $order))
             ->assertOk()
             ->assertSee('Order #'.$order->id);
 

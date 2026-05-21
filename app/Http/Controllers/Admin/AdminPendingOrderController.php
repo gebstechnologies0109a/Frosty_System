@@ -37,13 +37,9 @@ class AdminPendingOrderController extends Controller
         ]);
     }
 
-    public function show(Order $order): View
+    public function show(Order $order): RedirectResponse
     {
-        abort_unless($order->status === OrderStatus::Pending, 404);
-
-        $order->load(['user', 'distributor', 'items.product', 'approver:id,name']);
-
-        return view('admin.orders.show', compact('order'));
+        return redirect()->route('admin.orders.show', $order);
     }
 
     public function updateStatus(Request $request, Order $order): RedirectResponse

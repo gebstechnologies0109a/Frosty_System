@@ -13,12 +13,12 @@
         <tbody>
         @forelse ($orders as $order)
             <tr>
-                <td>{{ $order->id }}</td>
+                <td><a href="{{ route('admin.orders.show', $order) }}" class="fw-semibold text-decoration-none">#{{ $order->id }}</a></td>
                 <td>{{ $order->user->name }}</td>
                 <td>{{ $order->distributor->name }}</td>
                 <td class="text-end">{{ $order->total_points }}</td>
                 <td class="text-end">
-                    <a href="{{ route('admin.orders.pending.show', $order) }}" class="btn btn-sm btn-outline-primary">View</a>
+                    <a href="{{ route('admin.orders.show', $order) }}" class="btn btn-sm btn-outline-primary">View</a>
                     <form class="d-inline" method="post" action="{{ route('admin.orders.pending.approve', $order) }}">@csrf<button class="btn btn-sm btn-success">Approve</button></form>
                     <form class="d-inline" method="post" action="{{ route('admin.orders.pending.reject', $order) }}">@csrf<button class="btn btn-sm btn-outline-danger">Reject</button></form>
                 </td>
