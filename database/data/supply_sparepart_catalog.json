@@ -1,0 +1,14 @@
+[
+  {
+    "name": "Wafer Cone (441 pcs)",
+    "document_category": "cones",
+    "points": 0,
+    "prices": { "luzon": 514.0, "davao": 594.0, "tacloban": 709.0 }
+  },
+  {
+    "name": "Giant Cone (144 pcs)",
+    "document_category": "cones",
+    "points": 0,
+    "prices": { "luzon": 756.0, "davao": 853.0, "tacloban": 969.0 }
+  }
+]

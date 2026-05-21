@@ -1,19 +1,28 @@
-# Frosty System
+# Frosty Rewards System
 
-Kilo-based rewards platform (separate from DIY Rewards). Built with Laravel 13.
+Laravel 13 rewards platform for Frosty Softserve operators.
 
 ## Rules
 
-- **Input:** kilograms purchased at store
-- **Direct points:** 2 points per kilo
-- **Monthly qualification:** 20 kg personal volume (calendar month) for override eligibility
-- **Override:** 0.5 points per kilo to qualified uplines (levels 2–4)
+- Softserve: **2 points** per unit → **₱2** self-rebate (₱1 per point)
+- Qualification: **20** personal points per calendar month for override eligibility
+- Overrides: Levels **1–4** uplines; each upline must be qualified
+- **Main** = `distributors.id = 1` (`is_main = true`)
+- Distributors order from Main; never earn rebates
 
-## Requirements
+## Demo logins
 
-- PHP 8.2+
-- Composer
-- MySQL (Laragon)
+Password: `password`
+
+| Email | Role |
+|-------|------|
+| super@frosty.local | Super Admin |
+| purchasing@frosty.local | Purchasing Admin |
+| finance@frosty.local | Finance Admin |
+| it@frosty.local | IT Admin |
+| distributor@frosty.local | Distributor |
+| ana@frosty.local | Operator |
+| ben@frosty.local | Operator (L1 under Ana) |
 
 ## Setup
 
@@ -21,27 +30,8 @@ Kilo-based rewards platform (separate from DIY Rewards). Built with Laravel 13.
 composer install
 cp .env.example .env
 php artisan key:generate
-```
-
-Create database `frosty_rewards` and user `frosty_user`, then set `.env`:
-
-```
-APP_NAME=FrostySystem
-APP_URL=http://frosty.local
-DB_DATABASE=frosty_rewards
-DB_USERNAME=frosty_user
-DB_PASSWORD=your_password
-```
-
-```bash
-php artisan migrate
-php artisan db:seed
+php artisan migrate:fresh --seed
 php artisan serve
 ```
 
-- Dashboard: http://127.0.0.1:8000/
-- Store portal: http://127.0.0.1:8000/store/kilos
-
-## License
-
-MIT
+http://127.0.0.1:8000/login
