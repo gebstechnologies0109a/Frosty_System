@@ -35,3 +35,9 @@ php artisan serve
 ```
 
 http://127.0.0.1:8000/login
+
+## Deploy (Laravel Forge)
+
+GitHub: https://github.com/gebstechnologies0109a/Frosty_System
+
+See [docs/FORGE-DEPLOY.md](docs/FORGE-DEPLOY.md) for Forge site setup, `.env`, and `forge-deploy.sh`.
