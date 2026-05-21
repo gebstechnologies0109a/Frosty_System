@@ -39,8 +39,16 @@ class OrderController extends Controller
 
     public function createFromMain(): View
     {
+        $region = auth()->user()->priceRegion();
+
         return view('distributor.orders.create', [
-            'products' => Product::query()->active()->with('prices')->orderBy('name')->get(),
+            'products' => Product::query()
+                ->active()
+                ->forPricingRegion($region)
+                ->with(['prices' => fn ($q) => $q->where('region', $region)])
+                ->orderBy('name')
+                ->get(),
+            'priceRegion' => $region,
         ]);
     }
 

@@ -22,7 +22,8 @@ use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\AdminPageController;
 use App\Models\User;
 use App\Http\Controllers\Auth\LoginController;
-use App\Http\Controllers\Distributor\DashboardController as DistributorDashboardController;
+use App\Http\Controllers\Distributor\DistributorDashboardController;
+use App\Http\Controllers\Distributor\DistributorInventoryController;
 use App\Http\Controllers\Distributor\DistributorAnalyticsController;
 use App\Http\Controllers\Distributor\OrderController as DistributorOrderController;
 use App\Http\Controllers\HomeController;
@@ -192,9 +193,10 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
 });
 
 Route::middleware(['auth', 'role:distributor'])->prefix('distributor')->name('distributor.')->group(function () {
-    Route::get('/', DistributorDashboardController::class)->name('dashboard');
+    Route::get('/', [DistributorDashboardController::class, 'index'])->name('dashboard');
     Route::get('/analytics', [DistributorAnalyticsController::class, 'index'])->name('analytics');
     Route::get('/orders', [DistributorOrderController::class, 'index'])->name('orders.index');
+    Route::get('/inventory', [DistributorInventoryController::class, 'index'])->name('inventory.index');
     Route::get('/orders/create', [DistributorOrderController::class, 'createFromMain'])->name('orders.create');
     Route::post('/orders', [DistributorOrderController::class, 'storeFromMain'])->name('orders.store');
     Route::post('/orders/{order}/approve', [DistributorOrderController::class, 'approve'])->name('orders.approve');

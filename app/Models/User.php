@@ -52,7 +52,23 @@ class User extends Authenticatable
 
     public function priceRegion(): PriceRegion
     {
+        if ($this->isDistributor()) {
+            $profile = $this->relationLoaded('distributorProfile')
+                ? $this->distributorProfile
+                : $this->distributorProfile()->first();
+
+            if ($profile) {
+                return $profile->operatorPriceRegion();
+            }
+        }
+
         return $this->region ?? PriceRegion::Luzon;
+    }
+
+    /** Catalog price region key (operators: `region`; distributors: derived from profile). */
+    public function getPricingRegionAttribute(): string
+    {
+        return $this->priceRegion()->value;
     }
 
     public function sponsor(): BelongsTo

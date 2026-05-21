@@ -48,8 +48,9 @@
             @endif
             @if ($role === \App\Enums\UserRole::Distributor)
                 <a class="nav-link" href="{{ route('distributor.dashboard') }}">Dashboard</a>
-                <a class="nav-link" href="{{ route('distributor.analytics') }}">Analytics</a>
                 <a class="nav-link" href="{{ route('distributor.orders.index') }}">Orders</a>
+                <a class="nav-link" href="{{ route('distributor.inventory.index') }}">Inventory</a>
+                <a class="nav-link" href="{{ route('distributor.analytics') }}">Analytics</a>
             @endif
             @if ($role === \App\Enums\UserRole::Operator)
                 <a class="nav-link" href="{{ route('operator.dashboard') }}">Dashboard</a>

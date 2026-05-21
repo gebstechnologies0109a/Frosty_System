@@ -83,6 +83,14 @@ class Product extends Model
         return $query->where('status', 'active');
     }
 
+    /** Products that have a price row for the given catalog region. */
+    public function scopeForPricingRegion(Builder $query, PriceRegion|string $region): Builder
+    {
+        $key = $region instanceof PriceRegion ? $region->value : $region;
+
+        return $query->whereHas('prices', fn (Builder $q) => $q->where('region', $key));
+    }
+
     public function isActive(): bool
     {
         return $this->status === 'active';
