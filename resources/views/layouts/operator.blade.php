@@ -3,6 +3,7 @@
     $operator = auth()->user();
     $currentRoute = request()->route()?->getName();
     $hideFab = $currentRoute === 'operator.pos.index';
+    $hideBottomNav = $currentRoute === 'operator.pos.index';
     $ptrEnabled = in_array($currentRoute, $ui['pull_to_refresh_routes'] ?? [], true);
     $bottomNavActive = match ($currentRoute) {
         'operator.pos.index' => 'pos',
@@ -36,7 +37,7 @@
     @vite(['resources/css/frosty-operator.css', 'resources/js/frosty-operator.js'])
     @stack('head')
 </head>
-<body class="operator-shell" data-ptr="{{ $ptrEnabled ? '1' : '0' }}">
+<body class="operator-shell{{ $hideBottomNav ? ' operator-shell--pos' : '' }}" data-ptr="{{ $ptrEnabled ? '1' : '0' }}">
 <script>window.FrostyUI = @json($ui);</script>
 
 <header class="operator-topbar text-white shadow-sm">
@@ -96,6 +97,7 @@
 </a>
 @endif
 
+@if (! $hideBottomNav)
 <nav class="operator-bottom-nav d-lg-none" aria-label="Primary navigation">
     <a href="{{ route('operator.pos.index') }}" class="{{ $bottomNavActive === 'pos' ? 'active' : '' }}">
         <i class="fa-solid fa-cash-register"></i><span>POS</span>
@@ -110,6 +112,7 @@
         <i class="fa-solid fa-gauge-high"></i><span>Dashboard</span>
     </a>
 </nav>
+@endif
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 @stack('scripts')

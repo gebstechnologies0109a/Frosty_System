@@ -37,6 +37,11 @@ body.operator-shell {
     background: var(--frosty-surface);
 }
 
+/* POS: checkout bar replaces bottom nav on mobile */
+body.operator-shell--pos {
+    padding-bottom: calc(5.25rem + env(safe-area-inset-bottom, 0px));
+}
+
 @media (min-width: 992px) {
     body.operator-shell {
         padding-bottom: 1.5rem;

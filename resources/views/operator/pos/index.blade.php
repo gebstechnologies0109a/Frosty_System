@@ -11,9 +11,16 @@
 }
 .pos-product-card:active { transform: scale(.98); }
 .pos-qty-btn { min-width: 48px; min-height: 48px; font-size: 1.3rem; }
-.pos-checkout-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 3px solid #198754; padding: .85rem; z-index: 30; box-shadow: 0 -4px 16px rgba(0,0,0,.1); }
-@media (min-width: 992px) { .pos-checkout-bar { position: sticky; border-radius: .5rem; margin-top: 1rem; } body { padding-bottom: 0; } }
-@media (max-width: 991px) { body.operator-shell { padding-bottom: calc(4.5rem + 88px + env(safe-area-inset-bottom, 0px)); } }
+.pos-checkout-bar {
+    position: fixed; left: 0; right: 0; bottom: 0;
+    padding: .85rem .85rem calc(.85rem + env(safe-area-inset-bottom, 0px));
+    background: var(--bs-body-bg); border-top: 3px solid var(--frosty-success, #198754);
+    z-index: 1045; box-shadow: 0 -4px 20px rgba(0,0,0,.12);
+}
+@media (min-width: 992px) {
+    .pos-checkout-bar { display: none !important; }
+}
+body.operator-shell--pos { padding-bottom: calc(5.25rem + env(safe-area-inset-bottom, 0px)); }
 .pos-pnl { font-size: .9rem; }
 </style>
 @endpush
@@ -199,7 +206,7 @@
                 <button type="button" class="btn btn-success btn-lg w-100 payment-pick active" data-pay="cash">Cash</button>
             </div>
             <div class="modal-footer d-grid">
-                <button type="button" class="btn btn-success btn-lg" id="pos-confirm">Confirm</button>
+                <button type="button" class="btn btn-success btn-lg" id="pos-confirm"><i class="fa-solid fa-check me-1"></i>Confirm &amp; pay</button>
             </div>
         </div>
     </div>
@@ -220,14 +227,20 @@ if (DAY_LOCKED) {
 function renderCart() {
     const el = document.getElementById('pos-cart');
     const btns = [document.getElementById('pos-checkout-lg'), document.getElementById('pos-checkout-bar')];
+    const clearBtns = [document.getElementById('pos-clear'), document.getElementById('pos-clear-bar')];
+    const countEl = document.getElementById('pos-cart-count');
     let total = 0;
+    let itemCount = 0;
     if (cart.size === 0) {
         el.innerHTML = '<div class="text-center text-muted py-4">Tap a product to add</div>';
         btns.forEach(b => b && (b.disabled = true));
+        clearBtns.forEach(b => b && (b.disabled = true));
+        if (countEl) countEl.textContent = '0';
     } else {
         el.innerHTML = '';
         cart.forEach((item, id) => {
             total += item.price * item.qty;
+            itemCount += item.qty;
             const li = document.createElement('div');
             li.className = 'border-bottom py-2';
             li.innerHTML = `<div class="fw-semibold">${item.name}</div>
@@ -239,6 +252,8 @@ function renderCart() {
             el.appendChild(li);
         });
         btns.forEach(b => b && (b.disabled = DAY_LOCKED));
+        clearBtns.forEach(b => b && (b.disabled = DAY_LOCKED));
+        if (countEl) countEl.textContent = String(itemCount);
     }
     ['pos-subtotal','pos-total','pos-total-bar','modal-total'].forEach(id => {
         const n = document.getElementById(id);
@@ -285,7 +300,9 @@ document.getElementById('pos-cart').addEventListener('click', e => {
     renderCart();
 });
 
-document.getElementById('pos-clear')?.addEventListener('click', () => { cart.clear(); renderCart(); });
+const clearCart = () => { cart.clear(); renderCart(); };
+document.getElementById('pos-clear')?.addEventListener('click', clearCart);
+document.getElementById('pos-clear-bar')?.addEventListener('click', clearCart);
 const modal = new bootstrap.Modal(document.getElementById('checkoutModal'));
 const openCheckout = () => { if (DAY_LOCKED) { alert('Daily closing is complete for today.'); return; } if (cart.size) modal.show(); };
 document.getElementById('pos-checkout-lg')?.addEventListener('click', openCheckout);
