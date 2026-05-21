@@ -31,6 +31,7 @@ use App\Http\Controllers\Operator\OperatorAnalyticsController;
 use App\Http\Controllers\Operator\OperatorInventoryController;
 use App\Http\Controllers\Operator\OperatorPosController;
 use App\Http\Controllers\Operator\OperatorPosDailyClosingController;
+use App\Http\Controllers\Operator\OperatorProductController;
 use App\Http\Controllers\Operator\OperatorProductsForSaleController;
 use App\Http\Controllers\Operator\OperatorStorefrontController;
 use App\Http\Controllers\Operator\GenealogyController;
@@ -212,6 +213,7 @@ Route::middleware(['auth', 'role:operator'])->prefix('operator')->name('operator
     Route::post('/products-for-sale', [OperatorProductsForSaleController::class, 'store'])->name('products-for-sale.store');
     Route::put('/products-for-sale/{operatorProduct}', [OperatorProductsForSaleController::class, 'update'])->name('products-for-sale.update');
     Route::post('/products-for-sale/{operatorProduct}/toggle', [OperatorProductsForSaleController::class, 'toggle'])->name('products-for-sale.toggle');
+    Route::get('/products/search', [OperatorProductController::class, 'search'])->name('products.search');
     Route::get('/orders', [OperatorOrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/create', [OperatorOrderController::class, 'create'])->name('orders.create');
     Route::post('/orders', [OperatorOrderController::class, 'store'])->name('orders.store');

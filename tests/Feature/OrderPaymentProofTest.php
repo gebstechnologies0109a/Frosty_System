@@ -10,6 +10,7 @@ use App\Enums\UserRole;
 use App\Models\Distributor;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\ProductPrice;
 use App\Models\User;
 use App\Services\OrderPaymentProofService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -41,6 +42,14 @@ class OrderPaymentProofTest extends TestCase
             'points' => 0,
             'status' => 'active',
         ]);
+
+        foreach (PriceRegion::cases() as $region) {
+            ProductPrice::query()->create([
+                'product_id' => $product->id,
+                'region' => $region,
+                'price' => 100,
+            ]);
+        }
 
         return [$operator, $main, $product];
     }
