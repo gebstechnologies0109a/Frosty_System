@@ -43,6 +43,7 @@ final class PurchasingAnalyticsService
             'orderTrends' => $orderTrends,
             'categoryAnalytics' => $categoryAnalytics,
             'inventoryValue' => $inventoryValue,
+            'recentStockMovements' => $this->recentStockMovements(),
             'charts' => [
                 'inventoryByCategory' => $inventoryHealth['byCategoryChart'],
                 'categorySales' => $productPerformance['categorySalesChart'],
@@ -230,9 +231,12 @@ final class PurchasingAnalyticsService
     /** @return array<string, mixed> */
     private function orderTrends(Carbon $days30, Carbon $now): array
     {
+        $dayExpr = $this->sqlDayExpression('orders.created_at');
+        $monthExpr = $this->sqlMonthExpression('orders.created_at');
+
         $daily = Order::query()
-            ->where('created_at', '>=', $days30)
-            ->selectRaw('DATE(created_at) as day, COUNT(*) as total')
+            ->where('orders.created_at', '>=', $days30)
+            ->selectRaw("{$dayExpr} as day, COUNT(*) as total")
             ->groupBy('day')
             ->orderBy('day')
             ->pluck('total', 'day');
@@ -246,27 +250,49 @@ final class PurchasingAnalyticsService
         }
 
         $monthly = Order::query()
-            ->where('created_at', '>=', $now->copy()->subMonths(12))
-            ->selectRaw("DATE_FORMAT(created_at, '%Y-%m') as month, COUNT(*) as total")
+            ->where('orders.created_at', '>=', $now->copy()->subMonths(12))
+            ->selectRaw("{$monthExpr} as month, COUNT(*) as total")
             ->groupBy('month')
             ->orderBy('month')
             ->get();
 
-        $regionDist = Order::query()
-            ->where('created_at', '>=', $days30)
+        $regionRows = Order::query()
+            ->where('orders.created_at', '>=', $days30)
             ->select('price_region', DB::raw('COUNT(*) as total'))
             ->groupBy('price_region')
-            ->pluck('total', 'price_region');
+            ->get();
+
+        $regionDist = ['luzon' => 0, 'davao' => 0, 'tacloban' => 0];
+        foreach ($regionRows as $row) {
+            $key = $row->price_region?->value ?? (string) $row->price_region;
+            if (isset($regionDist[$key])) {
+                $regionDist[$key] = (int) $row->total;
+            }
+        }
 
         return [
             'dailyChart' => ['labels' => $dailyLabels, 'values' => $dailyValues],
             'monthly' => $monthly,
-            'regionDistribution' => [
-                'luzon' => (int) ($regionDist['luzon'] ?? 0),
-                'davao' => (int) ($regionDist['davao'] ?? 0),
-                'tacloban' => (int) ($regionDist['tacloban'] ?? 0),
-            ],
+            'regionDistribution' => $regionDist,
         ];
+    }
+
+    private function sqlDayExpression(string $column): string
+    {
+        return match (DB::connection()->getDriverName()) {
+            'sqlite' => "date({$column})",
+            'pgsql' => "CAST({$column} AS DATE)",
+            default => "DATE({$column})",
+        };
+    }
+
+    private function sqlMonthExpression(string $column): string
+    {
+        return match (DB::connection()->getDriverName()) {
+            'sqlite' => "strftime('%Y-%m', {$column})",
+            'pgsql' => "to_char({$column}, 'YYYY-MM')",
+            default => "DATE_FORMAT({$column}, '%Y-%m')",
+        };
     }
 
     /** @return list<array<string, mixed>> */
@@ -367,7 +393,7 @@ final class PurchasingAnalyticsService
                 'product_inventory.stock',
                 DB::raw("({$valueExpr}) as item_value"),
             )
-            ->having('item_value', '>', 0)
+            ->whereRaw("({$valueExpr}) > 0")
             ->orderByDesc('item_value')
             ->get();
 

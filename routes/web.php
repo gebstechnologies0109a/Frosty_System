@@ -69,7 +69,7 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
             Route::put('/products/{product}', [PurchasingProductController::class, 'update'])->name('products.update');
             Route::patch('/products/{product}/toggle-status', [PurchasingProductController::class, 'toggleStatus'])->name('products.toggle-status');
 
-            Route::middleware('role:purchasing_admin')->group(function () {
+            Route::middleware('role:purchasing_admin,super_admin')->group(function () {
                 Route::get('/analytics', [PurchasingAnalyticsController::class, 'index'])->name('analytics');
                 Route::get('/products/export', [PurchasingProductController::class, 'export'])->name('products.export');
                 Route::get('/products/import-template', [PurchasingProductController::class, 'importTemplate'])->name('products.import-template');
