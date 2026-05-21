@@ -2,10 +2,31 @@
 @section('header_title', 'Edit order #'.$order->id)
 @section('title', 'Edit Order')
 @section('content')
+@php
+    $isRejected = $order->status === \App\Enums\OrderStatus::Rejected;
+    $submitLabel = $isRejected ? 'Re-submit order' : 'Submit changes';
+@endphp
 <h1 class="h4 mb-3">Edit order #{{ $order->id }}</h1>
+<p class="small text-muted mb-3">
+    Status: <span class="badge text-bg-{{ $isRejected ? 'danger' : 'warning' }}">{{ ucfirst($order->status->value) }}</span>
+    @if ($isRejected)
+        — Update items or proof, then click <strong>Re-submit order</strong> to send back to your distributor.
+    @endif
+</p>
+
 @if (session('error'))
     <div class="alert alert-danger">{{ session('error') }}</div>
 @endif
+@if ($errors->any())
+    <div class="alert alert-danger">
+        <ul class="mb-0">
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
+
 <form method="post" action="{{ route('operator.orders.update', $order) }}" id="order-form" enctype="multipart/form-data">
     @csrf
     @method('PUT')
@@ -16,7 +37,7 @@
         <label class="form-label">Distributor / Main</label>
         <select name="distributor_id" id="distributor-select" class="form-select" required>
             @foreach ($distributors as $d)
-                <option value="{{ $d->id }}" @selected($order->distributor_id === $d->id)>
+                <option value="{{ $d->id }}" @selected(old('distributor_id', $order->distributor_id) == $d->id)>
                     {{ $d->name }}@if($d->is_main) (Main — Purchasing)@endif
                 </option>
             @endforeach
@@ -27,17 +48,16 @@
     <div class="mb-3">
         <label class="form-label" for="notes">Order notes</label>
         <textarea name="notes" id="notes" class="form-control" rows="3" maxlength="2000" placeholder="Optional notes for your distributor">{{ old('notes', $order->notes) }}</textarea>
-        @error('notes')<div class="text-danger small">{{ $message }}</div>@enderror
     </div>
 
-    <div class="mb-2 small text-muted">Search products by name (type at least 2 characters).</div>
+    <div class="mb-2 small text-muted">Products (at least one line required)</div>
     <div id="lines" class="order-lines"></div>
     <template id="product-line-template">
         <div class="row g-2 mb-3 line-row align-items-end">
             <div class="col-md-7">
                 <label class="form-label small mb-1">Product</label>
                 <div class="product-picker position-relative">
-                    <input type="hidden" class="product-id-input" required>
+                    <input type="hidden" class="product-id-input">
                     <input type="search" class="form-control product-search-input" placeholder="Search product…" autocomplete="off" inputmode="search">
                     <div class="product-search-results list-group shadow-sm d-none"></div>
                     <div class="product-selected badge text-bg-light border mt-1 d-none"></div>
@@ -56,14 +76,16 @@
 
     <div class="mb-3">
         <label class="form-label" for="payment_proof">Upload / replace proof of payment</label>
+        @if ($order->hasPaymentProof())
+            <p class="small text-success mb-1">A proof file is already on file. Upload a new file to replace it.</p>
+        @endif
         <input type="file" name="payment_proof" id="payment_proof" class="form-control"
-               accept="image/*,application/pdf">
-        <div class="form-text">JPG, PNG, HEIC, or PDF. Max 5 MB. Leave empty to keep current proof.</div>
-        @error('payment_proof')<div class="text-danger small">{{ $message }}</div>@enderror
+               accept="image/jpeg,image/png,image/heic,image/heif,application/pdf,.jpg,.jpeg,.png,.heic,.pdf">
+        <div class="form-text">JPG, PNG, HEIC, or PDF. Max 5 MB. Optional unless your distributor requires proof before approval.</div>
     </div>
 
-    <div class="d-flex gap-2">
-        <button type="submit" class="btn btn-primary">Save changes</button>
+    <div class="d-flex flex-wrap gap-2">
+        <button type="submit" class="btn btn-primary btn-lg" id="order-submit-btn">{{ $submitLabel }}</button>
         <a href="{{ route('operator.orders.show', $order) }}" class="btn btn-outline-secondary">Cancel</a>
     </div>
 </form>
@@ -95,6 +117,7 @@
     const pricingRegionLabel = document.getElementById('pricing-region-label');
     const linesEl = document.getElementById('lines');
     const template = document.getElementById('product-line-template');
+    const orderForm = document.getElementById('order-form');
     let lineIndex = 0;
 
     function selectedDistributorId() {
@@ -216,6 +239,16 @@
     } else {
         addLine(null);
     }
+
+    orderForm.addEventListener('submit', (e) => {
+        const productIds = [...orderForm.querySelectorAll('.product-id-input')]
+            .map((el) => el.value)
+            .filter((v) => v !== '');
+        if (!productIds.length) {
+            e.preventDefault();
+            alert('Add at least one product before submitting.');
+        }
+    });
 })();
 </script>
 @endpush

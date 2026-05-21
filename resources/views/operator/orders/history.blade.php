@@ -32,8 +32,13 @@
                 <td class="text-end">₱{{ number_format($order->total_amount, 2) }}</td>
                 <td class="text-end">{{ $order->total_points }}</td>
                 <td><span class="badge text-bg-{{ $statusClass }}">{{ ucfirst($order->status->value) }}</span></td>
-                <td class="text-end">
-                    <a href="{{ route('operator.orders.show', $order->id) }}" class="btn btn-primary btn-sm">View</a>
+                <td class="text-end text-nowrap">
+                    <a href="{{ route('operator.orders.show', $order->id) }}" class="btn btn-outline-primary btn-sm">View</a>
+                    @if (in_array($order->status, [\App\Enums\OrderStatus::Pending, \App\Enums\OrderStatus::Rejected], true))
+                        <a href="{{ route('operator.orders.edit', $order->id) }}" class="btn btn-primary btn-sm">
+                            {{ $order->status === \App\Enums\OrderStatus::Rejected ? 'Re-submit' : 'Edit' }}
+                        </a>
+                    @endif
                 </td>
             </tr>
         @empty

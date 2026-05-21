@@ -81,24 +81,26 @@ final class OperatorOrderService
     /**
      * @param  array<int, array{product_id: int, qty: int}>  $items
      */
-    public function updatePending(
+    public function saveEditableOrder(
         Order $order,
         User $operator,
         array $items,
         int $distributorId,
         ?string $paymentProofPath = null,
         ?string $notes = null,
+        bool $resubmitIfRejected = false,
     ): Order {
         $this->authorizeOwner($order, $operator);
 
-        if ($order->status !== OrderStatus::Pending) {
-            throw new RuntimeException('Only pending orders can be edited.');
+        if (! in_array($order->status, [OrderStatus::Pending, OrderStatus::Rejected], true)) {
+            throw new RuntimeException('This order can no longer be edited.');
         }
 
         $distributor = Distributor::query()->findOrFail($distributorId);
         $priceRegion = $distributor->operatorPriceRegion();
+        $wasRejected = $order->status === OrderStatus::Rejected;
 
-        return DB::transaction(function () use ($order, $operator, $items, $distributor, $priceRegion, $paymentProofPath, $notes) {
+        return DB::transaction(function () use ($order, $operator, $items, $distributor, $priceRegion, $paymentProofPath, $notes, $resubmitIfRejected, $wasRejected) {
             $order->items()->delete();
 
             $totalAmount = 0;
@@ -140,6 +142,12 @@ final class OperatorOrderService
                 $updates['payment_proof_path'] = $paymentProofPath;
             }
 
+            if ($wasRejected && $resubmitIfRejected) {
+                $updates['status'] = OrderStatus::Pending;
+                $updates['approved_by'] = null;
+                $updates['approved_at'] = null;
+            }
+
             $order->update($updates);
 
             $this->logger->log($operator, 'order.updated', [
@@ -147,8 +155,24 @@ final class OperatorOrderService
                 'distributor_id' => $distributor->id,
             ]);
 
+            if ($wasRejected && $resubmitIfRejected) {
+                $this->notifyDistributorOfResubmit($order->fresh(['distributor.user']), $operator);
+            }
+
             return $order->fresh(['items.product', 'distributor', 'approver']);
         });
+    }
+
+    /** @deprecated Use saveEditableOrder() */
+    public function updatePending(
+        Order $order,
+        User $operator,
+        array $items,
+        int $distributorId,
+        ?string $paymentProofPath = null,
+        ?string $notes = null,
+    ): Order {
+        return $this->saveEditableOrder($order, $operator, $items, $distributorId, $paymentProofPath, $notes);
     }
 
     public function uploadPaymentProof(Order $order, User $operator, string $path): Order
@@ -188,6 +212,13 @@ final class OperatorOrderService
             'distributor_id' => $order->distributor_id,
         ]);
 
+        $this->notifyDistributorOfResubmit($order->fresh(['distributor.user']), $operator);
+
+        return $order->fresh(['items.product', 'distributor']);
+    }
+
+    private function notifyDistributorOfResubmit(Order $order, User $operator): void
+    {
         $distributorUser = $order->distributor?->user;
         if ($distributorUser) {
             $this->logger->log($distributorUser, 'order.resubmitted_notify', [
@@ -196,8 +227,6 @@ final class OperatorOrderService
                 'operator_name' => $operator->name,
             ]);
         }
-
-        return $order->fresh(['items.product', 'distributor']);
     }
 
     private function deleteProofFile(?string $path): void

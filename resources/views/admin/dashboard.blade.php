@@ -24,6 +24,39 @@
         'pos_closings' => 'POS Closings',
     ];
 @endphp
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <span class="fw-semibold">Recent supply orders</span>
+        <a href="{{ route('admin.orders.index') }}" class="btn btn-sm btn-outline-primary">All orders</a>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>Operator</th>
+                    <th>Distributor</th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            @forelse ($recentOrders as $order)
+                <tr>
+                    <td><a href="{{ route('admin.orders.show', $order) }}" class="fw-semibold text-decoration-none">#{{ $order->id }}</a></td>
+                    <td>{{ $order->user?->name ?? '—' }}</td>
+                    <td>{{ $order->distributor?->name ?? '—' }}</td>
+                    <td><span class="badge text-bg-light text-dark border">{{ $order->status->value }}</span></td>
+                    <td class="text-end"><a href="{{ route('admin.orders.show', $order) }}" class="btn btn-sm btn-outline-secondary">View</a></td>
+                </tr>
+            @empty
+                <tr><td colspan="5" class="text-muted text-center py-3">No orders yet.</td></tr>
+            @endforelse
+            </tbody>
+        </table>
+    </div>
+</div>
+
 <div class="row g-3">
     @foreach ($stats as $label => $value)
         @php $href = $statLinks[$label] ?? null; @endphp

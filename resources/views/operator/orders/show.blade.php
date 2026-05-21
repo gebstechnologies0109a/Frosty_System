@@ -22,6 +22,15 @@
 @if (session('error'))
     <div class="alert alert-danger">{{ session('error') }}</div>
 @endif
+@if ($errors->any())
+    <div class="alert alert-danger">
+        <ul class="mb-0">
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
 
 <div class="card border-0 shadow-sm mb-3">
     <div class="card-body">
@@ -124,13 +133,12 @@
         @endif
 
         @if (in_array($order->status, [\App\Enums\OrderStatus::Pending, \App\Enums\OrderStatus::Rejected], true))
-            <form method="post" action="{{ route('operator.orders.payment-proof', $order) }}" enctype="multipart/form-data">
+            <form method="post" action="{{ route('operator.orders.payment-proof', $order) }}" enctype="multipart/form-data" class="border-top pt-3">
                 @csrf
-                <label class="form-label small" for="payment_proof">{{ $paymentProofUrl ? 'Replace proof' : 'Upload proof' }}</label>
-                <input type="file" name="payment_proof" id="payment_proof" class="form-control form-control-sm mb-2"
-                       accept="image/*,application/pdf" required>
-                <div class="form-text mb-2">JPG, PNG, HEIC, or PDF. Max 5 MB.</div>
-                @error('payment_proof')<div class="text-danger small mb-2">{{ $message }}</div>@enderror
+                <label class="form-label small" for="payment_proof_show">{{ $paymentProofUrl ? 'Replace proof' : 'Upload proof only' }}</label>
+                <input type="file" name="payment_proof" id="payment_proof_show" class="form-control form-control-sm mb-2"
+                       accept="image/jpeg,image/png,image/heic,image/heif,application/pdf,.jpg,.jpeg,.png,.heic,.pdf" required>
+                <div class="form-text mb-2">JPG, PNG, HEIC, or PDF. Max 5 MB. Saves immediately without changing products.</div>
                 <button type="submit" class="btn btn-outline-primary btn-sm">{{ $paymentProofUrl ? 'Replace proof' : 'Upload proof' }}</button>
             </form>
         @endif
@@ -175,14 +183,20 @@
 </div>
 
 <div class="d-flex flex-wrap gap-2">
-    @if ($order->status === \App\Enums\OrderStatus::Pending)
-        <a href="{{ route('operator.orders.edit', $order) }}" class="btn btn-primary">Edit order</a>
+    @if (in_array($order->status, [\App\Enums\OrderStatus::Pending, \App\Enums\OrderStatus::Rejected], true))
+        <a href="{{ route('operator.orders.edit', $order) }}" class="btn btn-primary btn-lg">
+            @if ($order->status === \App\Enums\OrderStatus::Rejected)
+                Edit &amp; re-submit order
+            @else
+                Edit &amp; submit changes
+            @endif
+        </a>
     @endif
     @if ($order->status === \App\Enums\OrderStatus::Rejected)
         <form method="post" action="{{ route('operator.orders.resubmit', $order) }}" class="d-inline"
-              onsubmit="return confirm('Re-submit this order to your distributor?');">
+              onsubmit="return confirm('Re-submit this order without editing?');">
             @csrf
-            <button type="submit" class="btn btn-warning">Re-submit order</button>
+            <button type="submit" class="btn btn-warning">Quick re-submit (no edits)</button>
         </form>
     @endif
 </div>

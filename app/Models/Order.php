@@ -110,6 +110,14 @@ class Order extends Model
         return $query->where('order_type', OrderType::Pos);
     }
 
+    public function scopeSupply($query)
+    {
+        return $query->where(function ($q) {
+            $q->where('order_type', OrderType::Supply)
+                ->orWhereNull('order_type');
+        });
+    }
+
     public function isPos(): bool
     {
         return $this->order_type === OrderType::Pos;

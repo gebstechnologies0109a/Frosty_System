@@ -97,7 +97,7 @@ class OperatorOrderHistoryTest extends TestCase
             ->assertOk()
             ->assertSee('Order history', false)
             ->assertSee(route('operator.orders.show', $order->id), false)
-            ->assertSee('btn btn-primary btn-sm">View', false);
+            ->assertSee('btn btn-outline-primary btn-sm">View', false);
     }
 
     public function test_show_page_displays_full_order_details(): void
@@ -114,7 +114,7 @@ class OperatorOrderHistoryTest extends TestCase
             ->assertSee('Mindanao', false)
             ->assertSee('Rush delivery', false)
             ->assertSee('Status timeline', false)
-            ->assertSee('Edit order', false);
+            ->assertSee('Edit &amp; submit changes', false);
     }
 
     public function test_operator_can_upload_payment_proof(): void
@@ -134,21 +134,51 @@ class OperatorOrderHistoryTest extends TestCase
         Storage::disk('public')->assertExists($order->fresh()->payment_proof_path);
     }
 
-    public function test_edit_page_only_for_pending_orders(): void
+    public function test_edit_page_for_pending_and_rejected_orders(): void
     {
         [$operator, $distributor] = $this->operatorWithDistributor();
         $pending = $this->pendingOrder($operator, $distributor);
+        $rejected = $this->pendingOrder($operator, $distributor);
+        $rejected->update(['status' => OrderStatus::Rejected]);
         $approved = $this->pendingOrder($operator, $distributor);
         $approved->update(['status' => OrderStatus::Approved, 'approved_at' => now()]);
 
         $this->actingAs($operator)
             ->get(route('operator.orders.edit', $pending))
             ->assertOk()
-            ->assertSee('Edit order', false);
+            ->assertSee('Submit changes', false);
+
+        $this->actingAs($operator)
+            ->get(route('operator.orders.edit', $rejected))
+            ->assertOk()
+            ->assertSee('Re-submit order', false);
 
         $this->actingAs($operator)
             ->get(route('operator.orders.edit', $approved))
             ->assertForbidden();
+    }
+
+    public function test_rejected_order_edit_and_submit_resubmits(): void
+    {
+        [$operator, $distributor, $distributorUser] = $this->operatorWithDistributor();
+        $order = $this->pendingOrder($operator, $distributor);
+        $order->update(['status' => OrderStatus::Rejected]);
+        $product = $this->seedProduct();
+
+        $this->actingAs($operator)
+            ->put(route('operator.orders.update', $order), [
+                'distributor_id' => $distributor->id,
+                'items' => [['product_id' => $product->id, 'qty' => 2]],
+                'notes' => 'Fixed and resubmitting',
+            ])
+            ->assertRedirect(route('operator.orders.show', $order))
+            ->assertSessionHas('success');
+
+        $this->assertSame(OrderStatus::Pending, $order->fresh()->status);
+        $this->assertDatabaseHas('activity_logs', [
+            'user_id' => $distributorUser->id,
+            'action' => 'order.resubmitted_notify',
+        ]);
     }
 
     public function test_operator_can_update_pending_order(): void

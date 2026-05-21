@@ -52,8 +52,8 @@ class OrderController extends Controller
     {
         $orders->authorizeOwner($order, Auth::user());
 
-        if ($order->status !== OrderStatus::Pending) {
-            abort(403, 'Only pending orders can be edited.');
+        if (! in_array($order->status, [OrderStatus::Pending, OrderStatus::Rejected], true)) {
+            abort(403, 'Only pending or rejected orders can be edited.');
         }
 
         $order->load(['items.product', 'distributor']);
@@ -103,22 +103,32 @@ class OrderController extends Controller
             $proofPath = $proofs->store($request->file('payment_proof'));
         }
 
+        $resubmit = $order->status === OrderStatus::Rejected;
+
         try {
-            $orders->updatePending(
+            $orders->saveEditableOrder(
                 $order,
                 $user,
                 $items,
                 (int) $validated['distributor_id'],
                 $proofPath,
                 $validated['notes'] ?? null,
+                resubmitIfRejected: $resubmit,
             );
         } catch (RuntimeException $e) {
-            return back()->with('error', $e->getMessage())->withInput();
+            return redirect()
+                ->route('operator.orders.edit', $order)
+                ->with('error', $e->getMessage())
+                ->withInput();
         }
+
+        $message = $resubmit
+            ? 'Order updated and re-submitted to your distributor.'
+            : 'Order changes saved.';
 
         return redirect()
             ->route('operator.orders.show', $order)
-            ->with('success', 'Order updated.');
+            ->with('success', $message);
     }
 
     public function uploadPaymentProof(

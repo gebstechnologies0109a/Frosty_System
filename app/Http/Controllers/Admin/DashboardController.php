@@ -22,6 +22,12 @@ class DashboardController extends Controller
                 'pos_logs' => Order::query()->pos()->count(),
                 'pos_closings' => PosDailyClosing::query()->count(),
             ],
+            'recentOrders' => Order::query()
+                ->supply()
+                ->with(['user', 'distributor'])
+                ->latest('id')
+                ->limit(15)
+                ->get(),
         ]);
     }
 }

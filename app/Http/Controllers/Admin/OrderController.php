@@ -25,16 +25,17 @@ class OrderController extends Controller
         $perPage = ListPage::perPage($request, 20);
 
         return view('admin.orders.index', [
-            'orders' => Order::query()
+            'allOrders' => Order::query()
+                ->supply()
+                ->with(['user', 'distributor'])
+                ->latest('id')
+                ->paginate($perPage, ['*'], 'all')
+                ->withQueryString(),
+            'mainQueueOrders' => Order::query()
                 ->forPurchasingQueue()
                 ->with(['user', 'distributor', 'items.product'])
-                ->latest()
-                ->paginate($perPage)
-                ->withQueryString(),
-            'allOrders' => Order::query()
-                ->with(['user', 'distributor'])
-                ->latest()
-                ->paginate($perPage, ['*'], 'all')
+                ->latest('id')
+                ->paginate($perPage, ['*'], 'main')
                 ->withQueryString(),
         ]);
     }
