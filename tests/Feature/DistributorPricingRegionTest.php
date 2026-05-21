@@ -15,6 +15,19 @@ class DistributorPricingRegionTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_distributor_create_form_loads_with_pricing_regions(): void
+    {
+        $admin = User::factory()->create(['role' => UserRole::SuperAdmin]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.distributors.create'))
+            ->assertOk()
+            ->assertSee('Add Distributor')
+            ->assertSee('Pricing region')
+            ->assertSee(DistributorPricingRegion::Luzon->label())
+            ->assertSee(DistributorPricingRegion::Mindanao->label());
+    }
+
     public function test_distributor_create_and_edit_pricing_region(): void
     {
         $admin = User::factory()->create(['role' => UserRole::SuperAdmin]);

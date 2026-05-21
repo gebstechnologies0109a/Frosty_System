@@ -15,8 +15,10 @@ use App\Models\User;
 use App\Services\AdminDistributorService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 use RuntimeException;
+use Throwable;
 
 class AdminDistributorController extends Controller
 {
@@ -44,7 +46,18 @@ class AdminDistributorController extends Controller
 
     public function create(): View
     {
-        return view('admin.distributors.create');
+        try {
+            return view('admin.distributors.create', [
+                'pricingRegions' => DistributorPricingRegion::cases(),
+            ]);
+        } catch (Throwable $e) {
+            Log::error('Failed to load Add Distributor form', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            throw $e;
+        }
     }
 
     public function store(StoreDistributorRequest $request, AdminDistributorService $service): RedirectResponse

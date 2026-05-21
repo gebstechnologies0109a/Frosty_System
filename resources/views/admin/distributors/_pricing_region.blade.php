@@ -1,3 +1,7 @@
+@php
+    $pricingRegions = $pricingRegions ?? \App\Enums\DistributorPricingRegion::cases();
+    $selected = $selected ?? \App\Enums\DistributorPricingRegion::Luzon->value;
+@endphp
 <div class="mb-3">
     <label class="form-label fw-semibold">Pricing region</label>
     <select name="pricing_region" class="form-select" required>
