@@ -30,7 +30,6 @@ use App\Http\Controllers\Operator\DashboardController as OperatorDashboardContro
 use App\Http\Controllers\Operator\OperatorAnalyticsController;
 use App\Http\Controllers\Operator\OperatorInventoryController;
 use App\Http\Controllers\Operator\OperatorPosController;
-use App\Http\Controllers\Operator\OperatorPosDailyClosingController;
 use App\Http\Controllers\Operator\OperatorProductController;
 use App\Http\Controllers\Operator\OperatorProductsForSaleController;
 use App\Http\Controllers\Operator\OperatorStorefrontController;
@@ -206,7 +205,6 @@ Route::middleware(['auth', 'role:operator'])->prefix('operator')->name('operator
     Route::get('/analytics', [OperatorAnalyticsController::class, 'index'])->name('analytics');
     Route::get('/pos', [OperatorPosController::class, 'index'])->name('pos.index');
     Route::post('/pos/checkout', [OperatorPosController::class, 'checkout'])->name('pos.checkout');
-    Route::post('/pos/daily-closing', [OperatorPosDailyClosingController::class, 'store'])->name('pos.daily-closing.store');
     Route::get('/supplies-inventory', [OperatorInventoryController::class, 'index'])->name('supplies-inventory.index');
     Route::post('/supplies-inventory/adjust', [OperatorInventoryController::class, 'adjust'])->name('supplies-inventory.adjust');
     Route::get('/products-for-sale', [OperatorProductsForSaleController::class, 'index'])->name('products-for-sale.index');

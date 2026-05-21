@@ -22,7 +22,6 @@ class OperatorPosController extends Controller
             'summary' => $data['summary'],
             'pnl' => $data['pnl'],
             'today' => $data['today'],
-            'closing' => $data['closing'],
             'dayLocked' => $data['day_locked'],
         ]);
     }

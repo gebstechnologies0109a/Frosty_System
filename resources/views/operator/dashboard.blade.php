@@ -16,10 +16,6 @@
             <i class="fa-solid fa-ice-cream"></i>
             <span class="small fw-semibold">Store Menu</span>
         </a>
-        <a href="{{ route('operator.pos.index') }}#dailyClosingModal" class="operator-quick-tile text-center">
-            <i class="fa-solid fa-calendar-check"></i>
-            <span class="small fw-semibold">Closing</span>
-        </a>
 </div>
 
 <section class="mb-4">
@@ -84,16 +80,6 @@
             <span class="badge text-bg-success">Qualified</span>
         @else
             <span class="badge text-bg-secondary">Not eligible</span>
-        @endif
-    </div>
-    <div class="frosty-stat-card">
-        <div class="text-muted small"><i class="fa-solid fa-lock me-1"></i> Daily closing</div>
-        @if ($dayLocked)
-            <div class="fw-semibold text-warning">Locked for today</div>
-            <a href="{{ route('operator.pos.index') }}" class="small">View on POS</a>
-        @else
-            <div class="fw-semibold text-success">Open</div>
-            <a href="{{ route('operator.pos.index') }}#dailyClosingModal" class="small">Submit closing</a>
         @endif
     </div>
 </div>

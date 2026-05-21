@@ -29,7 +29,6 @@ class DashboardController extends Controller
             'recentOrders' => Order::query()->where('user_id', $operator->id)->latest()->limit(5)->get(),
             'cards' => $metrics['cards'],
             'today' => $metrics['today'],
-            'dayLocked' => $metrics['day_locked'],
         ]);
     }
 }

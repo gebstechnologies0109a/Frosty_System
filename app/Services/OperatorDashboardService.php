@@ -84,8 +84,6 @@ final class OperatorDashboardService
                 'profit' => $todayPos['gross_profit'],
                 'inventory_usage' => $inventoryUsageToday,
             ],
-            'day_locked' => $this->dailyClosing->isTodayLocked($operator),
-            'closing' => $this->dailyClosing->todayForOperator($operator),
         ];
     }
 }

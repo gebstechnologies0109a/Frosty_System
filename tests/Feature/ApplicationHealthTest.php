@@ -49,10 +49,11 @@ class ApplicationHealthTest extends TestCase
             ->get(route('operator.dashboard'))
             ->assertOk()
             ->assertSee('Today at a glance')
-            ->assertSee('Inventory', false);
+            ->assertSee('Inventory', false)
+            ->assertDontSee('Daily closing', false);
     }
 
-    public function test_operator_pos_page_loads_with_daily_closing_context(): void
+    public function test_operator_pos_page_loads_without_daily_closing_ui(): void
     {
         $distributor = Distributor::query()->create([
             'name' => 'Test Distributor',
@@ -67,6 +68,7 @@ class ApplicationHealthTest extends TestCase
         $this->actingAs($operator)
             ->get(route('operator.pos.index'))
             ->assertOk()
-            ->assertSee('Frosty POS');
+            ->assertSee('Frosty POS')
+            ->assertDontSee('Daily Closing', false);
     }
 }
