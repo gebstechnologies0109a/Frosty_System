@@ -5,8 +5,8 @@
     'title' => $isNew ? 'New Page' : 'Edit: '.$page->title,
     'subtitle' => $isNew ? 'Set title and slug, add blocks, then save' : ($page->route_name ? 'Linked route: '.$page->route_name.' ('.$page->path.')' : 'Custom page: /p/'.$page->slug),
     'actions' => '<a href="'.route('admin.page-builder.index').'" class="btn btn-outline-secondary">← All pages</a>'
-        .($isNew ? '' : ' <a href="'.$page->liveUrl().'" class="btn btn-outline-secondary" target="_blank">View live</a>
-        <a href="'.route('admin.page-builder.preview', $page).'" class="btn btn-outline-secondary">Preview</a>'),
+        .($isNew ? '' : ($page->canOpenLive() ? ' <a href="'.$page->liveUrl().'" class="btn btn-outline-secondary" target="_blank">View live</a>' : '')
+        .' <a href="'.route('admin.page-builder.preview', $page).'" class="btn btn-outline-secondary">Preview</a>'),
 ])
 
 @if (! $isNew && $page->blockCount() > 0)
@@ -38,7 +38,7 @@
                     <label class="form-label mt-2">Status</label>
                     <select name="status" class="form-select" required>
                         @foreach (\App\Enums\AdminPageStatus::cases() as $s)
-                            <option value="{{ $s->value }}" @selected(old('status', $page->status->value) === $s->value)>{{ $s->label() }}</option>
+                            <option value="{{ $s->value }}" @selected(old('status', $page->pageStatus()->value) === $s->value)>{{ $s->label() }}</option>
                         @endforeach
                     </select>
                     @if ($page->is_system)

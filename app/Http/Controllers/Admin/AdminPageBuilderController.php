@@ -61,8 +61,12 @@ class AdminPageBuilderController extends Controller
 
     public function edit(AdminPage $page): View
     {
-        if ($page->layout_json === null) {
+        if ($page->layout_json === null || ! is_array($page->layout_json)) {
             $page->layout_json = AdminPageRenderer::defaultLayout();
+        }
+
+        if (! $page->status) {
+            $page->status = AdminPageStatus::Published;
         }
 
         return view('admin.page-builder.edit', [

@@ -73,7 +73,7 @@
                             <code>{{ $p->liveUrlLabel() }}</code>
                         </td>
                         <td>
-                            <span class="badge text-bg-{{ $p->status->badgeClass() }}">{{ $p->status->label() }}</span>
+                            <span class="badge text-bg-{{ $p->pageStatus()->badgeClass() }}">{{ $p->pageStatus()->label() }}</span>
                         </td>
                         <td class="small text-muted">{{ $p->blockCount() }}</td>
                         <td class="small text-muted text-nowrap">{{ $p->updated_at->format('M j, Y g:i A') }}</td>
@@ -83,9 +83,11 @@
                                 <button type="submit" class="btn btn-sm btn-outline-secondary">Duplicate</button>
                             </form>
                             <form method="post" action="{{ route('admin.page-builder.toggle-status', $p) }}" class="d-inline">@csrf @method('PATCH')
-                                <button type="submit" class="btn btn-sm btn-outline-warning">{{ $p->status === \App\Enums\AdminPageStatus::Published ? 'Unpublish' : 'Publish' }}</button>
+                                <button type="submit" class="btn btn-sm btn-outline-warning">{{ $p->pageStatus() === \App\Enums\AdminPageStatus::Published ? 'Unpublish' : 'Publish' }}</button>
                             </form>
-                            <a href="{{ $p->liveUrl() }}" class="btn btn-sm btn-outline-secondary" target="_blank">View</a>
+                            @if ($p->canOpenLive())
+                                <a href="{{ $p->liveUrl() }}" class="btn btn-sm btn-outline-secondary" target="_blank">View</a>
+                            @endif
                             @if (! $p->is_system)
                                 <form method="post" action="{{ route('admin.page-builder.destroy', $p) }}" class="d-inline" onsubmit="return confirm('Delete this page?')">@csrf @method('DELETE')
                                     <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>

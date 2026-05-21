@@ -16,12 +16,23 @@ class SyncSystemPagesCommand extends Command
     public function handle(): int
     {
         $created = 0;
-        $skipped = 0;
+        $updated = 0;
         $position = (int) AdminPage::query()->max('sort_order');
 
         foreach (SystemPagesRegistry::pages() as $definition) {
-            if (AdminPage::query()->where('slug', $definition['slug'])->exists()) {
-                $skipped++;
+            $page = AdminPage::query()->where('slug', $definition['slug'])->first();
+
+            if ($page) {
+                $page->update([
+                    'title' => $definition['title'],
+                    'route_name' => $definition['route_name'],
+                    'path' => $definition['path'],
+                    'is_system' => true,
+                    'status' => $page->status ?? AdminPageStatus::Published,
+                    'layout_json' => $page->layout_json ?? SystemPagesRegistry::defaultLayoutFor($definition['title']),
+                ]);
+                $updated++;
+
                 continue;
             }
 
@@ -39,7 +50,7 @@ class SyncSystemPagesCommand extends Command
             $created++;
         }
 
-        $this->info("System pages synced: {$created} created, {$skipped} already existed.");
+        $this->info("System pages synced: {$created} created, {$updated} updated.");
 
         return self::SUCCESS;
     }

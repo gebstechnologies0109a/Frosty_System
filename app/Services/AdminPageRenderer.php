@@ -7,12 +7,12 @@ use Illuminate\Support\Str;
 
 final class AdminPageRenderer
 {
-    public function render(AdminPage $page): string
+    public function render(AdminPage $page, bool $safe = false): string
     {
         $html = '<div class="admin-built-page">';
 
         foreach ($page->blocks() as $block) {
-            $html .= $this->renderBlock($block);
+            $html .= $this->renderBlock($block, $safe);
         }
 
         $html .= '</div>';
@@ -21,14 +21,19 @@ final class AdminPageRenderer
     }
 
     /** @param  array<string, mixed>  $block */
-    private function renderBlock(array $block): string
+    private function renderBlock(array $block, bool $safe): string
     {
-        $type = $block['type'] ?? 'text';
+        $type = (string) ($block['type'] ?? 'text');
         $content = e((string) ($block['content'] ?? ''));
         $title = e((string) ($block['title'] ?? ''));
         $body = e((string) ($block['body'] ?? ''));
         $url = e((string) ($block['url'] ?? '#'));
         $label = e((string) ($block['label'] ?? 'Button'));
+
+        if ($safe && in_array($type, ['html', 'script'], true)) {
+            return '<div class="alert alert-secondary small mb-3">['.e($type).' block hidden in live overlay — preview in Page Builder]</div>';
+        }
+
         $rawHtml = (string) ($block['html'] ?? '');
         $script = (string) ($block['script'] ?? '');
 
@@ -53,13 +58,17 @@ final class AdminPageRenderer
         $headers = $block['headers'] ?? ['Column 1', 'Column 2'];
         $rows = $block['rows'] ?? [['—', '—']];
 
+        if (! is_array($headers)) {
+            $headers = ['Column 1', 'Column 2'];
+        }
+
         $html = '<div class="table-responsive mb-3"><table class="table table-sm table-bordered"><thead><tr>';
         foreach ($headers as $h) {
             $html .= '<th>'.e((string) $h).'</th>';
         }
         $html .= '</tr></thead><tbody>';
 
-        foreach ($rows as $row) {
+        foreach ((array) $rows as $row) {
             $html .= '<tr>';
             foreach ((array) $row as $cell) {
                 $html .= '<td>'.e((string) $cell).'</td>';
@@ -70,6 +79,7 @@ final class AdminPageRenderer
         return $html.'</tbody></table></div>';
     }
 
+    /** @return array<string, mixed> */
     public static function defaultLayout(): array
     {
         return [

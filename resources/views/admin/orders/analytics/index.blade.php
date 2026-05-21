@@ -6,7 +6,7 @@
     $regional = $analytics['regionalStats'];
     $daily = $analytics['dailyTrends'];
     $monthly = $analytics['monthlyTrends'];
-    $distributors = $analytics['distributorStats'];
+    $distributorStats = $analytics['distributorStats'];
     $operators = $analytics['operatorStats'];
     $products = $analytics['productStats'];
     $categories = $analytics['categoryStats'];
@@ -52,7 +52,7 @@
                 <label class="form-label small">Distributor</label>
                 <select name="distributor_id" class="form-select form-select-sm">
                     <option value="">All distributors</option>
-                    @foreach ($distributors as $d)
+                    @foreach ($filterDistributors as $d)
                         <option value="{{ $d->id }}" @selected((string) ($filters['distributor_id'] ?? '') === (string) $d->id)>{{ $d->name }}</option>
                     @endforeach
                 </select>
@@ -192,7 +192,7 @@
                 <table class="table table-sm mb-0">
                     <thead class="table-light"><tr><th>Distributor</th><th>Region</th><th class="text-end">Orders</th><th class="text-end">Value</th></tr></thead>
                     <tbody>
-                    @forelse ($distributors['table'] as $row)
+                    @forelse ($distributorStats['table'] as $row)
                         <tr>
                             <td>{{ $row['name'] }}</td>
                             <td>{{ $row['region'] }}</td>

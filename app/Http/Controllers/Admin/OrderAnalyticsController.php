@@ -28,7 +28,7 @@ class OrderAnalyticsController extends Controller
         return view('admin.orders.analytics.index', [
             'analytics' => $analytics->build($request),
             'filters' => $request->only(['date_from', 'date_to', 'region', 'distributor_id', 'status']),
-            'distributors' => Distributor::query()->orderBy('name')->get(['id', 'name']),
+            'filterDistributors' => Distributor::query()->orderBy('name')->get(['id', 'name']),
         ]);
     }
 }

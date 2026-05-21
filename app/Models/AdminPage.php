@@ -4,7 +4,9 @@ namespace App\Models;
 
 use App\Enums\AdminPageStatus;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
+use Throwable;
 
 class AdminPage extends Model
 {
@@ -20,6 +22,12 @@ class AdminPage extends Model
         'spacer' => ['label' => 'Spacer', 'function' => 'Vertical whitespace'],
         'html' => ['label' => 'HTML block', 'function' => 'Custom raw HTML markup'],
         'script' => ['label' => 'Script block', 'function' => 'Embedded client script'],
+    ];
+
+    protected $attributes = [
+        'status' => 'published',
+        'is_system' => false,
+        'sort_order' => 0,
     ];
 
     protected $fillable = [
@@ -52,22 +60,24 @@ class AdminPage extends Model
         return static::query()->where('route_name', $routeName)->first();
     }
 
+    public function pageStatus(): AdminPageStatus
+    {
+        return $this->status ?? AdminPageStatus::Published;
+    }
+
     public function isPublished(): bool
     {
-        return $this->status === AdminPageStatus::Published;
+        return $this->pageStatus() === AdminPageStatus::Published;
+    }
+
+    public function canOpenLive(): bool
+    {
+        return $this->resolveLiveUrl() !== null;
     }
 
     public function liveUrl(): string
     {
-        if ($this->route_name && Route::has($this->route_name)) {
-            return route($this->route_name);
-        }
-
-        if ($this->path) {
-            return url($this->path);
-        }
-
-        return route('pages.show', $this->slug);
+        return $this->resolveLiveUrl() ?? route('admin.page-builder.index');
     }
 
     public function liveUrlLabel(): string
@@ -79,12 +89,51 @@ class AdminPage extends Model
         return '/p/'.$this->slug;
     }
 
+    public function resolveLiveUrl(): ?string
+    {
+        try {
+            if ($this->route_name && Route::has($this->route_name)) {
+                $route = Route::getRoutes()->getByName($this->route_name);
+                if ($route && count($route->parameterNames()) === 0) {
+                    return route($this->route_name);
+                }
+            }
+
+            if ($this->path) {
+                return url($this->path);
+            }
+
+            if ($this->slug && ! $this->is_system) {
+                return route('pages.show', $this->slug);
+            }
+        } catch (Throwable $e) {
+            Log::warning('AdminPage live URL resolution failed', [
+                'page_id' => $this->id,
+                'slug' => $this->slug,
+                'route_name' => $this->route_name,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        return null;
+    }
+
     /** @return list<array<string, mixed>> */
     public function blocks(): array
     {
         $layout = $this->layout_json ?? [];
 
-        return is_array($layout['blocks'] ?? null) ? $layout['blocks'] : [];
+        if (! is_array($layout)) {
+            return [];
+        }
+
+        $blocks = $layout['blocks'] ?? [];
+
+        if (! is_array($blocks)) {
+            return [];
+        }
+
+        return array_values(array_filter($blocks, fn ($block) => is_array($block)));
     }
 
     public function blockCount(): int

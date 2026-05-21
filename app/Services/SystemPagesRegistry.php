@@ -2,8 +2,6 @@
 
 namespace App\Services;
 
-use App\Services\AdminPageRenderer;
-
 final class SystemPagesRegistry
 {
     /** @return list<array{title: string, slug: string, route_name: string, path: string}> */

@@ -154,9 +154,14 @@ final class OrderAnalyticsService
     /** @return array<string, mixed> */
     private function dailyTrends(Builder $filtered, Carbon $days30, Carbon $now): array
     {
+        $dayExpr = match (DB::connection()->getDriverName()) {
+            'sqlite' => "date(orders.created_at)",
+            default => 'DATE(orders.created_at)',
+        };
+
         $daily = (clone $filtered)
-            ->where('created_at', '>=', $days30)
-            ->selectRaw('DATE(orders.created_at) as day, COUNT(*) as cnt, SUM(orders.total_amount) as val')
+            ->where('orders.created_at', '>=', $days30)
+            ->selectRaw("{$dayExpr} as day, COUNT(*) as cnt, SUM(orders.total_amount) as val")
             ->groupBy('day')
             ->orderBy('day')
             ->get()
@@ -183,9 +188,11 @@ final class OrderAnalyticsService
     /** @return array<string, mixed> */
     private function monthlyTrends(Builder $filtered, Carbon $now): array
     {
+        $monthExpr = $this->sqlMonthExpression('orders.created_at');
+
         $monthly = (clone $filtered)
-            ->where('created_at', '>=', $now->copy()->subMonths(12))
-            ->selectRaw("DATE_FORMAT(orders.created_at, '%Y-%m') as month, COUNT(*) as cnt, SUM(orders.total_amount) as val")
+            ->where('orders.created_at', '>=', $now->copy()->subMonths(12))
+            ->selectRaw("{$monthExpr} as month, COUNT(*) as cnt, SUM(orders.total_amount) as val")
             ->groupBy('month')
             ->orderBy('month')
             ->get();
@@ -240,7 +247,7 @@ final class OrderAnalyticsService
             ->get();
 
         $activeIds = (clone $scoped)
-            ->where('created_at', '>=', $days30)
+            ->where('orders.created_at', '>=', $days30)
             ->join('users', 'orders.user_id', '=', 'users.id')
             ->where('users.role', UserRole::Operator)
             ->distinct()
@@ -366,5 +373,14 @@ final class OrderAnalyticsService
             ->join('orders', 'order_items.order_id', '=', 'orders.id')
             ->join('products', 'order_items.product_id', '=', 'products.id')
             ->whereIn('orders.id', (clone $orders)->select('orders.id'));
+    }
+
+    private function sqlMonthExpression(string $column): string
+    {
+        return match (DB::connection()->getDriverName()) {
+            'sqlite' => "strftime('%Y-%m', {$column})",
+            'pgsql' => "to_char({$column}, 'YYYY-MM')",
+            default => "DATE_FORMAT({$column}, '%Y-%m')",
+        };
     }
 }

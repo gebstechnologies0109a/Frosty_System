@@ -89,6 +89,9 @@ class PageBuilderSystemPagesTest extends TestCase
         $this->artisan('frosty:sync-pages')->assertSuccessful();
         $this->assertSame($count, AdminPage::query()->count());
         $this->assertSame(count(SystemPagesRegistry::pages()), AdminPage::query()->where('is_system', true)->count());
+
+        $page = AdminPage::query()->where('slug', 'admin-operators')->firstOrFail();
+        $this->assertSame('admin.operators.index', $page->route_name);
     }
 
     public function test_non_super_admin_cannot_sync_or_access_builder(): void
