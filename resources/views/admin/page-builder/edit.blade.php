@@ -3,9 +3,10 @@
 @section('content')
 @include('admin.partials.page-header', [
     'title' => $isNew ? 'New Page' : 'Edit: '.$page->title,
-    'subtitle' => $isNew ? 'Set title and slug, add blocks, then save' : 'Position on site: /p/'.$page->slug.' — drag blocks to set layout order',
+    'subtitle' => $isNew ? 'Set title and slug, add blocks, then save' : ($page->route_name ? 'Linked route: '.$page->route_name.' ('.$page->path.')' : 'Custom page: /p/'.$page->slug),
     'actions' => '<a href="'.route('admin.page-builder.index').'" class="btn btn-outline-secondary">← All pages</a>'
-        .($isNew ? '' : ' <a href="'.route('admin.page-builder.preview', $page).'" class="btn btn-outline-secondary">Preview</a>'),
+        .($isNew ? '' : ' <a href="'.$page->liveUrl().'" class="btn btn-outline-secondary" target="_blank">View live</a>
+        <a href="'.route('admin.page-builder.preview', $page).'" class="btn btn-outline-secondary">Preview</a>'),
 ])
 
 @if (! $isNew && $page->blockCount() > 0)
@@ -33,8 +34,22 @@
                     <label class="form-label">Title</label>
                     <input type="text" name="title" class="form-control" value="{{ old('title', $page->title) }}" required>
                     <label class="form-label mt-2">Slug</label>
-                    <input type="text" name="slug" class="form-control" value="{{ old('slug', $page->slug) }}" pattern="[a-z0-9]+(?:-[a-z0-9]+)*" required placeholder="my-page">
-                    <p class="small text-muted mt-1">Public URL: /p/<span id="slugPreview">{{ old('slug', $page->slug) ?: 'slug' }}</span></p>
+                    <input type="text" name="slug" class="form-control" value="{{ old('slug', $page->slug) }}" pattern="[a-z0-9]+(?:-[a-z0-9]+)*" required placeholder="my-page" {{ $page->is_system ? 'readonly' : '' }}>
+                    <label class="form-label mt-2">Status</label>
+                    <select name="status" class="form-select" required>
+                        @foreach (\App\Enums\AdminPageStatus::cases() as $s)
+                            <option value="{{ $s->value }}" @selected(old('status', $page->status->value) === $s->value)>{{ $s->label() }}</option>
+                        @endforeach
+                    </select>
+                    @if ($page->is_system)
+                        <p class="small text-muted mt-2 mb-0">System page — linked to <code>{{ $page->path }}</code></p>
+                        <input type="hidden" name="route_name" value="{{ $page->route_name }}">
+                        <input type="hidden" name="path" value="{{ $page->path }}">
+                    @else
+                        <label class="form-label mt-2">Path (optional)</label>
+                        <input type="text" name="path" class="form-control" value="{{ old('path', $page->path) }}" placeholder="/admin/custom">
+                        <p class="small text-muted mt-1">Custom pages: /p/<span id="slugPreview">{{ old('slug', $page->slug) ?: 'slug' }}</span></p>
+                    @endif
                 </div>
             </div>
             <div class="card border-0 shadow-sm">
@@ -72,10 +87,14 @@
 <link href="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.css" rel="stylesheet" onerror="this.remove()">
 @endpush
 @push('scripts')
+@php
+    $builderBlockKeys = array_keys(\App\Models\AdminPage::BLOCK_TYPES);
+    $builderBlocks = $page->blocks();
+@endphp
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
 <script>
-const blockTypes = @json(array_keys(['text'=>1,'card'=>1,'table'=>1,'button'=>1,'chart'=>1,'form'=>1,'divider'=>1,'spacer'=>1,'html'=>1,'script'=>1]));
-let blocks = @json($page->layout_json['blocks'] ?? []);
+const blockTypes = @json($builderBlockKeys);
+let blocks = @json($builderBlocks);
 const canvas = document.getElementById('blocksCanvas');
 const emptyHint = document.getElementById('emptyHint');
 const slugInput = document.querySelector('[name=slug]');

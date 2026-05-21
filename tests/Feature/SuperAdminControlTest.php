@@ -85,12 +85,13 @@ class SuperAdminControlTest extends TestCase
             ->assertOk()
             ->assertSee('Page Builder')
             ->assertSee('All pages')
-            ->assertSee('Layout blocks');
+            ->assertSee('Total pages');
 
         $this->actingAs($admin)
             ->post(route('admin.page-builder.store'), [
                 'title' => 'Test Page',
                 'slug' => 'test-page',
+                'status' => \App\Enums\AdminPageStatus::Published->value,
                 'layout_json' => json_encode([
                     'blocks' => [
                         ['id' => '1', 'type' => 'text', 'content' => 'Hello builder'],
@@ -115,6 +116,7 @@ class SuperAdminControlTest extends TestCase
             ->put(route('admin.page-builder.update', $page), [
                 'title' => 'Test Page Updated',
                 'slug' => 'test-page',
+                'status' => \App\Enums\AdminPageStatus::Published->value,
                 'layout_json' => json_encode(['blocks' => [['id' => '1', 'type' => 'text', 'content' => 'Done']]]),
                 'finish' => '1',
             ])

@@ -16,6 +16,7 @@ if [ -f package.json ]; then
 fi
 
 php artisan migrate --force
+php artisan frosty:sync-pages
 php artisan storage:link --force 2>/dev/null || true
 php artisan config:cache
 php artisan route:cache

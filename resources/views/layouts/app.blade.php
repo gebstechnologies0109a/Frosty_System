@@ -76,6 +76,9 @@
     @endif
     @if (session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
     @if ($errors->any())<div class="alert alert-danger"><ul class="mb-0">@foreach ($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul></div>@endif
+    @if (! empty($pageBuilderOverlay))
+        <div class="page-builder-overlay mb-4">{!! $pageBuilderOverlay !!}</div>
+    @endif
     @yield('content')
 </main>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

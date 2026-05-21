@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use App\Enums\AdminPageStatus;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Route;
 
 class AdminPage extends Model
 {
@@ -23,6 +25,10 @@ class AdminPage extends Model
     protected $fillable = [
         'slug',
         'title',
+        'status',
+        'route_name',
+        'path',
+        'is_system',
         'layout_json',
         'sort_order',
     ];
@@ -32,7 +38,45 @@ class AdminPage extends Model
         return [
             'layout_json' => 'array',
             'sort_order' => 'integer',
+            'is_system' => 'boolean',
+            'status' => AdminPageStatus::class,
         ];
+    }
+
+    public static function findByRoute(?string $routeName): ?self
+    {
+        if (! $routeName) {
+            return null;
+        }
+
+        return static::query()->where('route_name', $routeName)->first();
+    }
+
+    public function isPublished(): bool
+    {
+        return $this->status === AdminPageStatus::Published;
+    }
+
+    public function liveUrl(): string
+    {
+        if ($this->route_name && Route::has($this->route_name)) {
+            return route($this->route_name);
+        }
+
+        if ($this->path) {
+            return url($this->path);
+        }
+
+        return route('pages.show', $this->slug);
+    }
+
+    public function liveUrlLabel(): string
+    {
+        if ($this->route_name || $this->path) {
+            return $this->path ?? '/admin';
+        }
+
+        return '/p/'.$this->slug;
     }
 
     /** @return list<array<string, mixed>> */
