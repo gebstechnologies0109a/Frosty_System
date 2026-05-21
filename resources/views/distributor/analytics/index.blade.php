@@ -267,7 +267,7 @@
                 @forelse ($gen['activeBranches'] as $b)
                     <li>{{ $b['name'] }} — {{ $b['referrals'] }} referral(s)</li>
                 @empty
-                    <li class="text-muted">No downlines yet</li>
+                    <li class="text-muted">No referred operators yet</li>
                 @endforelse
                 </ul>
             </div>

@@ -33,7 +33,7 @@
         <div class="text-muted small">Last 30 days</div>
     </div>
     <div class="frosty-stat-card">
-        <div class="text-muted small"><i class="fa-solid fa-users me-1"></i>Downline operators</div>
+        <div class="text-muted small"><i class="fa-solid fa-users me-1"></i>Referred operators</div>
         <div class="fs-3 fw-bold">{{ number_format($s['downline_operators']) }}</div>
         <div class="text-muted small">All levels</div>
     </div>
@@ -55,7 +55,7 @@
 <div class="tab-content" id="genealogyReportPanels">
     <div class="tab-pane fade show active" id="panel-l14" role="tabpanel">
         <div class="card border-0 shadow-sm mb-4 frosty-chart-card">
-            <div class="card-header fw-semibold">Level 1–4 Downline Report</div>
+            <div class="card-header fw-semibold">Level 1–4 Referred Operators Report</div>
             <div class="table-responsive">
                 <table class="table table-sm table-striped mb-0">
                     <thead class="table-light">
@@ -90,7 +90,7 @@
                 <div class="card-body" style="height:220px"><canvas id="chart-downline-orders"></canvas></div>
             </div>
             <div class="frosty-chart-card">
-                <div class="card-header">Downline softserve points</div>
+                <div class="card-header">Referred operator softserve points</div>
                 <div class="card-body" style="height:220px"><canvas id="chart-downline-points"></canvas></div>
             </div>
         </div>
@@ -127,7 +127,7 @@
 
         <div class="frosty-grid-analytics cols-3">
             <div class="frosty-chart-card">
-                <div class="card-header">Self vs downline</div>
+                <div class="card-header">Self vs referred operators</div>
                 <div class="card-body" style="height:220px"><canvas id="chart-self-vs-downline"></canvas></div>
             </div>
             <div class="frosty-chart-card" style="grid-column: span 1">

@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Admin;
 
 use App\Enums\UserRole;
+use App\Enums\UserStatus;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
@@ -18,24 +19,28 @@ class StoreUserRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:255'],
+            'first_name' => ['required', 'string', 'max:120'],
+            'last_name' => ['nullable', 'string', 'max:120'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'role' => ['required', Rule::in(array_keys(UserRole::creatableBySuperAdmin()))],
-            'password' => ['required', 'string', Password::defaults()],
+            'status' => ['required', Rule::enum(UserStatus::class)],
+            'password' => ['required_without:generate_password', 'nullable', 'string', Password::defaults()],
+            'generate_password' => ['sometimes', 'boolean'],
+            'sponsor_id' => ['nullable', 'integer', 'exists:users,id'],
             'distributor_id' => [
                 Rule::requiredIf(fn () => $this->input('role') === UserRole::Operator->value),
                 'nullable',
                 'integer',
                 'exists:distributors,id',
             ],
+            'profile_photo' => ['nullable', 'image', 'max:2048'],
         ];
     }
 
-    /** @return array<string, string> */
-    public function attributes(): array
+    protected function prepareForValidation(): void
     {
-        return [
-            'distributor_id' => 'distributor',
-        ];
+        if ($this->boolean('generate_password') && ! $this->filled('password')) {
+            $this->merge(['password' => bin2hex(random_bytes(8))]);
+        }
     }
 }

@@ -14,9 +14,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 #[Fillable([
     'name',
+    'first_name',
+    'last_name',
+    'profile_photo_path',
     'email',
     'password',
     'role',
@@ -123,5 +128,39 @@ class User extends Authenticatable
     public function earnsRebates(): bool
     {
         return $this->isOperator();
+    }
+
+    public function activityLogs(): HasMany
+    {
+        return $this->hasMany(ActivityLog::class);
+    }
+
+    public function displayName(): string
+    {
+        $full = trim(($this->first_name ?? '').' '.($this->last_name ?? ''));
+
+        return $full !== '' ? $full : (string) $this->name;
+    }
+
+    public function initials(): string
+    {
+        $first = Str::substr($this->first_name ?? $this->name, 0, 1);
+        $last = Str::substr($this->last_name ?? '', 0, 1);
+
+        return strtoupper($first.$last) ?: '?';
+    }
+
+    public function profilePhotoUrl(): ?string
+    {
+        if (! $this->profile_photo_path) {
+            return null;
+        }
+
+        return Storage::disk('public')->url($this->profile_photo_path);
+    }
+
+    public static function fullNameFromParts(string $firstName, string $lastName = ''): string
+    {
+        return trim($firstName.' '.$lastName);
     }
 }

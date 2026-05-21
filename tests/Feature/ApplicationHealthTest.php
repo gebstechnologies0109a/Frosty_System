@@ -30,7 +30,7 @@ class ApplicationHealthTest extends TestCase
             ->get(route('admin.users.create'))
             ->assertOk()
             ->assertSee('Add User')
-            ->assertSee('Access level');
+            ->assertSee('First name');
     }
 
     public function test_operator_dashboard_mobile_layout_loads(): void

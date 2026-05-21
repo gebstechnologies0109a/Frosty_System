@@ -50,7 +50,7 @@ final class OperatorAnalyticsService
                     'values' => collect($level0to4Report['rows'])->pluck('order_value')->all(),
                 ],
                 'selfVsDownline' => [
-                    'labels' => ['Self (L0)', 'Downline (L1–L4)'],
+                    'labels' => ['Self (L0)', 'Referred operators (L1–L4)'],
                     'orders' => [
                         $level0to4Report['rows'][0]['orders'] ?? 0,
                         collect($level0to4Report['rows'])->slice(1)->sum('orders'),

@@ -19,7 +19,7 @@
 
 @for ($level = 1; $level <= 4; $level++)
     <div class="card mb-3">
-        <div class="card-header fw-semibold">Level {{ $level }}</div>
+        <div class="card-header fw-semibold">Level {{ $level }} — Referred operators</div>
         <table class="table table-sm mb-0">
             <thead><tr><th>Name</th><th>Email</th><th class="text-end">Pts</th><th>Qualified</th></tr></thead>
             <tbody>

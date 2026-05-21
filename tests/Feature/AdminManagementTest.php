@@ -30,9 +30,10 @@ class AdminManagementTest extends TestCase
             ->assertOk()
             ->assertSee(route('admin.operators.index'), false)
             ->assertSee(route('admin.distributors.index'), false)
+            ->assertSee(route('admin.users.index'), false)
             ->assertSee(route('admin.products.index'), false)
-            ->assertSee(route('admin.orders.pending'), false)
-            ->assertSee(route('admin.withdrawals.pending'), false);
+            ->assertSee(route('admin.pos.logs'), false)
+            ->assertSee(route('admin.pos.closings'), false);
     }
 
     public function test_super_admin_can_access_management_indexes(): void

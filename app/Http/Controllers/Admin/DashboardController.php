@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\PosDailyClosing;
 use App\Models\Product;
 use App\Models\User;
-use App\Models\Withdrawal;
 use Illuminate\Contracts\View\View;
 
 class DashboardController extends Controller
@@ -17,9 +17,10 @@ class DashboardController extends Controller
             'stats' => [
                 'operators' => User::query()->where('role', 'operator')->count(),
                 'distributors' => User::query()->where('role', 'distributor')->count(),
+                'users' => User::query()->count(),
                 'products' => Product::query()->count(),
-                'pending_orders' => Order::query()->where('status', 'pending')->count(),
-                'pending_withdrawals' => Withdrawal::query()->where('status', 'pending')->count(),
+                'pos_logs' => Order::query()->pos()->count(),
+                'pos_closings' => PosDailyClosing::query()->count(),
             ],
         ]);
     }
