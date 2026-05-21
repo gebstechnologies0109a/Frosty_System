@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\PurchasingAnalyticsController;
 use App\Http\Controllers\Admin\PurchasingProductController;
 use App\Http\Controllers\Admin\StockMovementController;
 use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Distributor\DashboardController as DistributorDashboardController;
 use App\Http\Controllers\Distributor\DistributorAnalyticsController;
@@ -93,6 +94,9 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
         });
 
         Route::middleware('role:super_admin')->group(function () {
+            Route::get('/users/create', [AdminUserController::class, 'create'])->name('users.create');
+            Route::post('/users', [AdminUserController::class, 'store'])->name('users.store');
+
             Route::get('/operator-products', [AdminOperatorProductController::class, 'index'])->name('operator-products.index');
             Route::put('/operator-products/{operatorProduct}', [AdminOperatorProductController::class, 'update'])->name('operator-products.update');
             Route::get('/pos-sales-logs/secure', [PosSalesLogController::class, 'secure'])->name('pos-sales-logs.secure');

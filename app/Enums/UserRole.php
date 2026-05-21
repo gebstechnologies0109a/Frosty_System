@@ -43,4 +43,16 @@ enum UserRole: string
             self::ItAdmin->value,
         ];
     }
+
+    /** @return array<string, string> Role value => label for Super Admin user creation */
+    public static function creatableBySuperAdmin(): array
+    {
+        return [
+            self::SuperAdmin->value => 'Super Admin',
+            self::PurchasingAdmin->value => 'Admin',
+            self::FinanceAdmin->value => 'Finance Admin',
+            self::Distributor->value => 'Distributor',
+            self::Operator->value => 'Operator',
+        ];
+    }
 }
