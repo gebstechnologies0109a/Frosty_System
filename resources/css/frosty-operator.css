@@ -1,0 +1,365 @@
+/**
+ * Frosty Mobile UI — Bootstrap 5 + design tokens (see config/frosty-ui.php)
+ */
+:root {
+    --frosty-primary: #007bff;
+    --frosty-primary-dark: #0056b3;
+    --frosty-primary-light: #4da3ff;
+    --frosty-success: #198754;
+    --frosty-warning: #ffc107;
+    --frosty-danger: #dc3545;
+    --frosty-accent: #00c2ff;
+    --frosty-surface: #f4f7fb;
+    --frosty-font: 'Poppins', system-ui, sans-serif;
+    --frosty-bottom-nav-h: 4.5rem;
+    --frosty-topbar-h: 4.25rem;
+    --frosty-fab-size: 3.5rem;
+    --frosty-radius-lg: 1rem;
+    --frosty-radius-xl: 1.25rem;
+    --frosty-shadow: 0 4px 14px rgba(0, 123, 255, 0.25);
+}
+
+[data-bs-theme='dark'] {
+    --frosty-surface: #1a1d21;
+}
+
+[data-bs-theme='light'] {
+    --bs-primary: var(--frosty-primary);
+    --bs-primary-rgb: 0, 123, 255;
+    --bs-link-color: var(--frosty-primary);
+    --bs-link-hover-color: var(--frosty-primary-dark);
+}
+
+body.operator-shell {
+    font-family: var(--frosty-font);
+    min-height: 100vh;
+    padding-bottom: calc(var(--frosty-bottom-nav-h) + env(safe-area-inset-bottom, 0px) + 1rem);
+    background: var(--frosty-surface);
+}
+
+@media (min-width: 992px) {
+    body.operator-shell {
+        padding-bottom: 1.5rem;
+    }
+}
+
+/* Top bar */
+.operator-topbar {
+    background: linear-gradient(135deg, var(--frosty-primary) 0%, var(--frosty-primary-dark) 100%);
+    position: sticky;
+    top: 0;
+    z-index: 1040;
+    min-height: var(--frosty-topbar-h);
+}
+
+/* Drawer */
+.operator-drawer .nav-link {
+    border-radius: var(--frosty-radius-lg);
+    padding: 0.65rem 0.85rem;
+    color: inherit;
+    font-weight: 500;
+}
+
+.operator-drawer .nav-link:hover,
+.operator-drawer .nav-link.active {
+    background: color-mix(in srgb, var(--frosty-primary) 14%, transparent);
+    color: var(--frosty-primary);
+}
+
+.operator-drawer .nav-section {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--bs-secondary-color);
+    margin: 1rem 0 0.35rem;
+    padding-left: 0.85rem;
+}
+
+/* Bottom navigation */
+.operator-bottom-nav {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: var(--frosty-bottom-nav-h);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    background: var(--bs-body-bg);
+    border-top: 1px solid var(--bs-border-color);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
+    z-index: 1030;
+    display: flex;
+}
+
+@media (min-width: 992px) {
+    .operator-bottom-nav {
+        display: none;
+    }
+
+    .operator-desktop-sidebar {
+        display: block !important;
+        position: sticky;
+        top: 4.75rem;
+        height: calc(100vh - 4.75rem);
+    }
+
+    .operator-fab {
+        display: none;
+    }
+}
+
+.operator-bottom-nav a {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.15rem;
+    text-decoration: none;
+    color: var(--bs-secondary-color);
+    font-size: 0.65rem;
+    font-weight: 600;
+    padding-top: 0.35rem;
+    transition: color 0.15s;
+}
+
+.operator-bottom-nav a i {
+    font-size: 1.25rem;
+}
+
+.operator-bottom-nav a.active {
+    color: var(--frosty-primary);
+}
+
+/* FAB */
+.operator-fab {
+    position: fixed;
+    right: 1rem;
+    bottom: calc(var(--frosty-bottom-nav-h) + env(safe-area-inset-bottom, 0px) + 0.75rem);
+    width: var(--frosty-fab-size);
+    height: var(--frosty-fab-size);
+    border-radius: 50%;
+    background: var(--frosty-primary);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--frosty-shadow);
+    z-index: 1035;
+    text-decoration: none;
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.operator-fab:hover {
+    transform: scale(1.05);
+    color: #fff;
+    box-shadow: 0 6px 20px rgba(0, 123, 255, 0.5);
+}
+
+.operator-fab span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+}
+
+.operator-fab i {
+    font-size: 1.35rem;
+}
+
+/* Responsive grids */
+.frosty-grid-stats {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    gap: 0.75rem;
+}
+
+@media (min-width: 576px) {
+    .frosty-grid-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 992px) {
+    .frosty-grid-stats {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.frosty-grid-glance {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+}
+
+.frosty-grid-quick {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+}
+
+.frosty-grid-analytics {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+}
+
+@media (min-width: 768px) {
+    .frosty-grid-analytics {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 1200px) {
+    .frosty-grid-analytics.cols-3 {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* Cards & tiles */
+.operator-quick-tile,
+.frosty-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 1rem 0.5rem;
+    border-radius: var(--frosty-radius-xl);
+    background: var(--bs-body-bg);
+    border: 1px solid var(--bs-border-color);
+    text-decoration: none;
+    color: inherit;
+    min-height: 5.5rem;
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.operator-quick-tile:hover,
+.frosty-tile:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+    color: inherit;
+}
+
+.operator-quick-tile i,
+.frosty-tile i {
+    font-size: 1.5rem;
+    color: var(--frosty-primary);
+}
+
+.operator-stat-card,
+.frosty-stat-card {
+    position: relative;
+    border-radius: var(--frosty-radius-xl);
+    border: 1px solid var(--bs-border-color);
+    padding: 1rem;
+    height: 100%;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    background: var(--bs-body-bg);
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.operator-stat-card:hover,
+.frosty-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    color: inherit;
+}
+
+.operator-glance-item,
+.frosty-glance-item {
+    border-radius: var(--frosty-radius-lg);
+    padding: 0.85rem;
+    background: var(--bs-tertiary-bg);
+    border: 1px solid var(--bs-border-color-translucent, transparent);
+}
+
+.frosty-chart-card {
+    border-radius: var(--frosty-radius-xl);
+    border: 1px solid var(--bs-border-color);
+    overflow: hidden;
+    height: 100%;
+    background: var(--bs-body-bg);
+}
+
+.frosty-chart-card .card-header {
+    font-weight: 600;
+    font-size: 0.875rem;
+    background: var(--bs-body-bg);
+    border-bottom: 1px solid var(--bs-border-color);
+}
+
+.frosty-section-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--bs-secondary-color);
+    margin-bottom: 0.5rem;
+}
+
+/* Modal */
+.frosty-modal .modal-content {
+    border-radius: var(--frosty-radius-xl);
+    border: none;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+.frosty-modal .modal-header {
+    background: linear-gradient(135deg, var(--frosty-primary) 0%, var(--frosty-primary-dark) 100%);
+    color: #fff;
+    border-radius: var(--frosty-radius-xl) var(--frosty-radius-xl) 0 0;
+}
+
+.frosty-modal .modal-header .btn-close {
+    filter: invert(1);
+}
+
+/* Pull to refresh */
+#ptr-indicator {
+    position: fixed;
+    top: 3.75rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(-120%);
+    transition: transform 0.2s;
+    z-index: 1050;
+    background: var(--bs-body-bg);
+    border-radius: 2rem;
+    padding: 0.35rem 1rem;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--frosty-primary);
+}
+
+#ptr-indicator.ptr-visible {
+    transform: translateX(-50%) translateY(0);
+}
+
+.operator-desktop-sidebar {
+    display: none;
+}
+
+.text-frosty-primary {
+    color: var(--frosty-primary) !important;
+}
+
+.bg-frosty-primary {
+    background-color: var(--frosty-primary) !important;
+}
+
+.btn-frosty {
+    background: var(--frosty-primary);
+    border-color: var(--frosty-primary);
+    color: #fff;
+    font-weight: 600;
+}
+
+.btn-frosty:hover {
+    background: var(--frosty-primary-dark);
+    border-color: var(--frosty-primary-dark);
+    color: #fff;
+}
