@@ -22,6 +22,7 @@ php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 php artisan event:cache
+php artisan queue:restart 2>/dev/null || true
 chmod -R ug+rwx storage bootstrap/cache
 
 echo DEPLOY_OK

@@ -23,3 +23,5 @@ _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
+deploy-remote.sh
+gh-auth-output.txt

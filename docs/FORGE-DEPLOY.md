@@ -53,7 +53,7 @@ php artisan db:seed   # optional demo data; skip on real production
 
 - **Scheduler**: enable “Run scheduler” (runs `* * * * * php artisan schedule:run`)
 - **Queue**: add a daemon `php artisan queue:work --sleep=3 --tries=3`
-- **SSL**: LetsEncrypt on the site
+- **SSL**: LetsEncrypt on the site (see [HTTPS-SETUP.md](HTTPS-SETUP.md) if HTTPS fails)
 - **Storage**: `storage:link` runs in `forge-deploy.sh`; ensure `storage/` and `bootstrap/cache/` are writable
 
 ## 6. Trigger deploy from Windows (optional)

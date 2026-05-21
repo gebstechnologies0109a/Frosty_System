@@ -13,10 +13,13 @@ $FORGE_COMPOSER install --no-dev --no-interaction --prefer-dist --optimize-autol
 if [ -f artisan ]; then
     $FORGE_PHP artisan storage:link --force 2>/dev/null || true
     $FORGE_PHP artisan migrate --force
+    $FORGE_PHP artisan frosty:sync-pages
     $FORGE_PHP artisan config:cache
     $FORGE_PHP artisan route:cache
     $FORGE_PHP artisan view:cache
     $FORGE_PHP artisan event:cache
+    $FORGE_PHP artisan queue:restart 2>/dev/null || true
+    chmod -R ug+rwx storage bootstrap/cache 2>/dev/null || true
 fi
 
 if [ -f package.json ]; then
