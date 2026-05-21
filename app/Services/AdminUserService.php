@@ -120,6 +120,37 @@ final class AdminUserService
         $user->update(['password' => $password]);
     }
 
+    public function changeRole(User $user, UserRole $role): User
+    {
+        if ($user->role === UserRole::SuperAdmin && $role !== UserRole::SuperAdmin) {
+            if (User::query()->where('role', UserRole::SuperAdmin)->count() <= 1) {
+                throw new RuntimeException('Cannot change role of the only Super Admin.');
+            }
+        }
+
+        if ($user->isDistributor() && $user->distributorProfile?->is_main && $role !== UserRole::Distributor) {
+            throw new RuntimeException('Cannot change role of the main distributor.');
+        }
+
+        $user->update(['role' => $role]);
+
+        return $user->fresh();
+    }
+
+    public function toggleStatus(User $user): User
+    {
+        if ($user->role === UserRole::SuperAdmin && $user->status === UserStatus::Active) {
+            if (User::query()->where('role', UserRole::SuperAdmin)->where('status', UserStatus::Active)->count() <= 1) {
+                throw new RuntimeException('Cannot deactivate the only active Super Admin.');
+            }
+        }
+
+        $next = $user->status === UserStatus::Active ? UserStatus::Inactive : UserStatus::Active;
+        $user->update(['status' => $next]);
+
+        return $user->fresh();
+    }
+
     public function delete(User $user): void
     {
         if ($user->role === UserRole::SuperAdmin && User::query()->where('role', UserRole::SuperAdmin)->count() <= 1) {

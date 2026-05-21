@@ -4,9 +4,7 @@
 @include('admin.partials.page-header', [
     'title' => $user->displayName(),
     'subtitle' => $user->email,
-    'actions' => '<a href="'.route('admin.users.edit', $user).'" class="btn btn-outline-secondary">Edit User</a>
-        <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#resetPasswordModal">Reset Password</button>
-        <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteUserModal">Delete User</button>',
+    'actions' => view('admin.partials.user-show-actions', ['user' => $user])->render(),
 ])
 <div class="d-flex align-items-center gap-3 mb-4">
     @include('admin.partials.user-avatar', ['user' => $user, 'size' => 64])
@@ -94,6 +92,26 @@
         @else
             <p class="text-muted">No role-specific related data for this account.</p>
         @endif
+    </div>
+</div>
+
+<div class="modal fade" id="changeRoleModal" tabindex="-1">
+    <div class="modal-dialog">
+        <form method="post" action="{{ route('admin.users.change-role', $user) }}" class="modal-content">
+            @csrf @method('PATCH')
+            <div class="modal-header"><h5 class="modal-title">Change role</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <select name="role" class="form-select" required>
+                    @foreach (\App\Enums\UserRole::cases() as $r)
+                        <option value="{{ $r->value }}" @selected($user->role === $r)>{{ $r->label() }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save role</button>
+            </div>
+        </form>
     </div>
 </div>
 

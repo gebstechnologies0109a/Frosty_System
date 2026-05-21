@@ -5,12 +5,14 @@ namespace App\Http\Controllers\Admin;
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\ChangeRoleRequest;
 use App\Http\Requests\Admin\ResetPasswordRequest;
 use App\Http\Requests\Admin\StoreUserRequest;
 use App\Http\Requests\Admin\UpdateUserRequest;
 use App\Models\ActivityLog;
 use App\Models\Distributor;
 use App\Models\User;
+use App\Services\AdminImpersonationService;
 use App\Services\AdminUserService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -142,5 +144,83 @@ class UserController extends Controller
         $users->resetPassword($user, $request->validated('password'));
 
         return back()->with('success', 'Password reset successfully.');
+    }
+
+    public function changeRole(ChangeRoleRequest $request, User $user, AdminUserService $users): RedirectResponse
+    {
+        try {
+            $users->changeRole($user, UserRole::from($request->validated('role')));
+        } catch (RuntimeException $e) {
+            return back()->withErrors(['role' => $e->getMessage()]);
+        }
+
+        return back()->with('success', 'Role updated.');
+    }
+
+    public function toggleStatus(User $user, AdminUserService $users): RedirectResponse
+    {
+        try {
+            $users->toggleStatus($user);
+        } catch (RuntimeException $e) {
+            return back()->withErrors(['status' => $e->getMessage()]);
+        }
+
+        return back()->with('success', 'User status updated.');
+    }
+
+    public function forceLogout(User $user, AdminImpersonationService $impersonation): RedirectResponse
+    {
+        $impersonation->forceLogout($user);
+
+        return back()->with('success', 'All sessions for this user have been cleared.');
+    }
+
+    public function impersonate(User $user, AdminImpersonationService $impersonation): RedirectResponse
+    {
+        $admin = request()->user();
+
+        try {
+            $impersonation->impersonate($admin, $user);
+        } catch (RuntimeException $e) {
+            return back()->withErrors(['impersonate' => $e->getMessage()]);
+        }
+
+        return redirect($this->dashboardRouteFor($user))
+            ->with('success', 'You are now impersonating '.$user->displayName().'.');
+    }
+
+    public function stopImpersonate(AdminImpersonationService $impersonation): RedirectResponse
+    {
+        if (! $impersonation->isImpersonating()) {
+            return redirect()->route('admin.dashboard');
+        }
+
+        $impersonation->stop();
+
+        return redirect()
+            ->route('admin.users.index')
+            ->with('success', 'Impersonation ended.');
+    }
+
+    public function relatedData(User $user): RedirectResponse
+    {
+        if ($user->isOperator()) {
+            return redirect()->route('admin.users.show', $user)->withFragment('tab-related');
+        }
+
+        if ($user->isDistributor()) {
+            return redirect()->route('admin.distributors.orders', $user);
+        }
+
+        return redirect()->route('admin.users.show', $user)->withFragment('tab-related');
+    }
+
+    private function dashboardRouteFor(User $user): string
+    {
+        return match ($user->role) {
+            UserRole::SuperAdmin, UserRole::PurchasingAdmin, UserRole::FinanceAdmin, UserRole::ItAdmin => route('admin.dashboard'),
+            UserRole::Distributor => route('distributor.dashboard'),
+            UserRole::Operator => route('operator.dashboard'),
+        };
     }
 }

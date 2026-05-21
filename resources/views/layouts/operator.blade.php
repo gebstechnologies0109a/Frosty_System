@@ -76,6 +76,12 @@
             </div>
         </aside>
         <div class="col-lg-9">
+            @if (session(\App\Services\AdminImpersonationService::SESSION_IMPERSONATOR))
+                <div class="alert alert-warning d-flex justify-content-between align-items-center mb-3 py-2">
+                    <span class="small">Impersonation active</span>
+                    <form method="post" action="{{ route('admin.users.stop-impersonate') }}">@csrf<button class="btn btn-sm btn-dark">Stop</button></form>
+                </div>
+            @endif
             @if ($ptrEnabled)
             <div id="ptr-indicator" class="ptr-indicator" role="status" aria-live="polite" aria-hidden="true">
                 <i class="fa-solid fa-rotate me-1"></i> Pull to refresh

@@ -17,7 +17,9 @@ use App\Http\Controllers\Admin\PurchasingAnalyticsController;
 use App\Http\Controllers\Admin\PurchasingProductController;
 use App\Http\Controllers\Admin\StockMovementController;
 use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\Admin\AdminPageBuilderController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\AdminPageController;
 use App\Models\User;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Distributor\DashboardController as DistributorDashboardController;
@@ -39,6 +41,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', HomeController::class)->name('home');
 Route::get('/store/{operatorId}', [OperatorStorefrontController::class, 'show'])->name('store.menu');
+Route::get('/p/{slug}', [AdminPageController::class, 'show'])->name('pages.show');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'show'])->name('login');
@@ -51,6 +54,8 @@ Route::bind('operator', fn (string $value) => User::query()->where('role', UserR
 Route::bind('distributor', fn (string $value) => User::query()->where('role', UserRole::Distributor)->findOrFail($value));
 
 Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
+    Route::post('/users/stop-impersonate', [AdminUserController::class, 'stopImpersonate'])->name('users.stop-impersonate');
+
     Route::middleware('role:super_admin,purchasing_admin,finance_admin,it_admin')->group(function () {
         Route::get('/', AdminDashboardController::class)->name('dashboard');
 
@@ -118,6 +123,19 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
             Route::put('/users/{user}', [AdminUserController::class, 'update'])->name('users.update');
             Route::delete('/users/{user}', [AdminUserController::class, 'destroy'])->name('users.destroy');
             Route::post('/users/{user}/reset-password', [AdminUserController::class, 'resetPassword'])->name('users.reset-password');
+            Route::patch('/users/{user}/role', [AdminUserController::class, 'changeRole'])->name('users.change-role');
+            Route::patch('/users/{user}/toggle-status', [AdminUserController::class, 'toggleStatus'])->name('users.toggle-status');
+            Route::post('/users/{user}/force-logout', [AdminUserController::class, 'forceLogout'])->name('users.force-logout');
+            Route::post('/users/{user}/impersonate', [AdminUserController::class, 'impersonate'])->name('users.impersonate');
+            Route::get('/users/{user}/related', [AdminUserController::class, 'relatedData'])->name('users.related');
+
+            Route::get('/page-builder', [AdminPageBuilderController::class, 'index'])->name('page-builder.index');
+            Route::get('/page-builder/create', [AdminPageBuilderController::class, 'create'])->name('page-builder.create');
+            Route::post('/page-builder', [AdminPageBuilderController::class, 'store'])->name('page-builder.store');
+            Route::get('/page-builder/{page}/edit', [AdminPageBuilderController::class, 'edit'])->name('page-builder.edit');
+            Route::put('/page-builder/{page}', [AdminPageBuilderController::class, 'update'])->name('page-builder.update');
+            Route::delete('/page-builder/{page}', [AdminPageBuilderController::class, 'destroy'])->name('page-builder.destroy');
+            Route::get('/page-builder/{page}/preview', [AdminPageBuilderController::class, 'preview'])->name('page-builder.preview');
 
             Route::redirect('/pos/logs', '/admin/pos-sales-logs/secure')->name('pos.logs');
             Route::redirect('/pos/closings', '/admin/pos/daily-closings')->name('pos.closings');

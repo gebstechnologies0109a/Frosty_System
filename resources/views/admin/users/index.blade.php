@@ -38,8 +38,7 @@
                     <td><span class="badge text-bg-{{ $u->status === \App\Enums\UserStatus::Active ? 'success' : 'secondary' }}">{{ $u->status->value }}</span></td>
                     <td class="small text-muted">{{ $u->created_at->format('M j, Y') }}</td>
                     <td class="text-end">
-                        <a href="{{ route('admin.users.show', $u) }}" class="btn btn-sm btn-outline-primary">View</a>
-                        <a href="{{ route('admin.users.edit', $u) }}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                        @include('admin.partials.user-actions-dropdown', ['u' => $u])
                     </td>
                 </tr>
             @empty

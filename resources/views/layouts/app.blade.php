@@ -25,6 +25,7 @@
                 @endif
                 @if ($role === \App\Enums\UserRole::SuperAdmin)
                     <a class="nav-link" href="{{ route('admin.users.index') }}">Users</a>
+                    <a class="nav-link" href="{{ route('admin.page-builder.index') }}">Page Builder</a>
                     <a class="nav-link" href="{{ route('admin.operators.index') }}">Operators</a>
                     <a class="nav-link" href="{{ route('admin.distributors.index') }}">Distributors</a>
                     <a class="nav-link" href="{{ route('admin.orders.pending') }}">Pending Orders</a>
@@ -67,9 +68,17 @@
     </div>
 </nav>
 <main class="container pb-5">
+    @if (session(\App\Services\AdminImpersonationService::SESSION_IMPERSONATOR))
+        <div class="alert alert-warning d-flex justify-content-between align-items-center">
+            <span>You are impersonating another user.</span>
+            <form method="post" action="{{ route('admin.users.stop-impersonate') }}">@csrf<button class="btn btn-sm btn-dark">Stop impersonating</button></form>
+        </div>
+    @endif
     @if (session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
     @if ($errors->any())<div class="alert alert-danger"><ul class="mb-0">@foreach ($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul></div>@endif
     @yield('content')
 </main>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+@stack('scripts')
 </body>
 </html>
