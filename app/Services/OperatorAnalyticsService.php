@@ -27,7 +27,7 @@ final class OperatorAnalyticsService
         $now = Carbon::now();
         $days30 = $now->copy()->subDays(30);
 
-        $downlines = $this->genealogy->downlinesByLevel($operator, 4);
+        $downlines = $this->genealogy->downlinesByLevel($operator);
         $level1to4Report = $this->buildDownlineReport($operator, $downlines, $days30);
         $level0to4Report = $this->buildFullNetworkReport($operator, $downlines, $days30);
 

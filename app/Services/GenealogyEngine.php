@@ -8,6 +8,11 @@ use Illuminate\Support\Collection;
 
 final class GenealogyEngine
 {
+    private function maxDepth(): int
+    {
+        return max(1, (int) config('frosty.max_genealogy_depth', 4));
+    }
+
     public function assignGenealogy(User $operator, ?User $sponsor = null): User
     {
         if ($sponsor !== null) {
@@ -33,8 +38,9 @@ final class GenealogyEngine
     /**
      * @return array<int, Collection<int, User>>
      */
-    public function downlinesByLevel(User $operator, int $maxLevel = 4): array
+    public function downlinesByLevel(User $operator, ?int $maxLevel = null): array
     {
+        $maxLevel ??= $this->maxDepth();
         $levels = [];
         $currentIds = [$operator->id];
 
@@ -62,8 +68,9 @@ final class GenealogyEngine
     /**
      * @return array<int, User|null>
      */
-    public function uplineChain(User $buyer, int $maxLevel = 4): array
+    public function uplineChain(User $buyer, ?int $maxLevel = null): array
     {
+        $maxLevel ??= $this->maxDepth();
         $chain = [];
         $referrerId = $buyer->sponsor_id;
 

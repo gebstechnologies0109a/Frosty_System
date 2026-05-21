@@ -110,6 +110,10 @@ final class OrderEngine
 
     public function reject(Order $order, User $actor): Order
     {
+        if ($order->status !== OrderStatus::Pending) {
+            throw new \RuntimeException('Order is not pending.');
+        }
+
         $this->assertCanApprove($order, $actor);
 
         $order->update(['status' => OrderStatus::Rejected]);

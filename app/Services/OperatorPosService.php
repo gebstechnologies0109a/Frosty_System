@@ -48,6 +48,9 @@ final class OperatorPosService
             'products' => $products,
             'summary' => $this->salesSummary($operator),
             'pnl' => $this->profitAndLoss($operator),
+            'today' => $this->dailyClosing->todayTotals($operator),
+            'closing' => $this->dailyClosing->todayForOperator($operator),
+            'day_locked' => $this->dailyClosing->isTodayLocked($operator),
         ];
     }
 

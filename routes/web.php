@@ -21,6 +21,7 @@ use App\Http\Controllers\Operator\DashboardController as OperatorDashboardContro
 use App\Http\Controllers\Operator\OperatorAnalyticsController;
 use App\Http\Controllers\Operator\OperatorInventoryController;
 use App\Http\Controllers\Operator\OperatorPosController;
+use App\Http\Controllers\Operator\OperatorPosDailyClosingController;
 use App\Http\Controllers\Operator\OperatorProductsForSaleController;
 use App\Http\Controllers\Operator\OperatorStorefrontController;
 use App\Http\Controllers\Operator\GenealogyController;
@@ -43,7 +44,7 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     Route::middleware('role:super_admin,purchasing_admin,finance_admin,it_admin')->group(function () {
         Route::get('/', AdminDashboardController::class)->name('dashboard');
 
-            Route::middleware('role:purchasing_admin,super_admin')->prefix('purchasing')->name('purchasing.')->group(function () {
+        Route::middleware('role:purchasing_admin,super_admin')->prefix('purchasing')->name('purchasing.')->group(function () {
             Route::get('/stock-movements', [StockMovementController::class, 'index'])->name('stock-movements.index');
             Route::get('/stock-movements/{stockMovement}', [StockMovementController::class, 'show'])->name('stock-movements.show');
             Route::get('/products', [PurchasingProductController::class, 'index'])->name('products.index');
