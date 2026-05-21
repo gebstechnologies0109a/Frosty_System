@@ -41,9 +41,16 @@ final class OrderEngine
             ? $distributor->operatorPriceRegion()
             : $user->priceRegion();
 
+        if ($source === OrderSource::Operator && ! $distributorId && $user->distributor_id) {
+            $distributorId = (int) $user->distributor_id;
+            $distributor = Distributor::query()->findOrFail($distributorId);
+            $priceRegion = $distributor->operatorPriceRegion();
+        }
+
         return DB::transaction(function () use ($user, $items, $distributorId, $source, $priceRegion, $paymentProofPath) {
             $order = Order::query()->create([
                 'user_id' => $user->id,
+                'operator_id' => $source === OrderSource::Operator ? $user->id : null,
                 'distributor_id' => $distributorId,
                 'status' => OrderStatus::Pending,
                 'total_amount' => 0,

@@ -127,10 +127,14 @@ final class OperatorOrderService
             }
 
             $updates = [
+                'operator_id' => $operator->id,
                 'distributor_id' => $distributor->id,
                 'price_region' => $priceRegion,
                 'total_amount' => $totalAmount,
                 'total_points' => $totalPoints,
+                'status' => OrderStatus::Pending,
+                'approved_by' => null,
+                'approved_at' => null,
             ];
 
             if ($notes !== null) {
@@ -142,12 +146,6 @@ final class OperatorOrderService
                 $updates['payment_proof_path'] = $paymentProofPath;
             }
 
-            if ($wasRejected && $resubmitIfRejected) {
-                $updates['status'] = OrderStatus::Pending;
-                $updates['approved_by'] = null;
-                $updates['approved_at'] = null;
-            }
-
             $order->update($updates);
 
             $this->logger->log($operator, 'order.updated', [
@@ -155,7 +153,7 @@ final class OperatorOrderService
                 'distributor_id' => $distributor->id,
             ]);
 
-            if ($wasRejected && $resubmitIfRejected) {
+            if ($wasRejected) {
                 $this->notifyDistributorOfResubmit($order->fresh(['distributor.user']), $operator);
             }
 

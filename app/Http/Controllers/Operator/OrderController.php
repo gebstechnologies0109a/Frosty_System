@@ -199,7 +199,8 @@ class OrderController extends Controller
             $proofPath = $proofs->store($request->file('payment_proof'));
         }
 
-        $order = $engine->create($user, $items, (int) $validated['distributor_id'], $proofPath);
+        $distributorId = (int) ($validated['distributor_id'] ?: $user->distributor_id);
+        $order = $engine->create($user, $items, $distributorId, $proofPath);
 
         if (! empty($validated['notes'])) {
             $order->update(['notes' => $validated['notes']]);

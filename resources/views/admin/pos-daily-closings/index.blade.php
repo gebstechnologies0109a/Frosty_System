@@ -6,7 +6,7 @@
         <h1 class="h3 mb-1">POS Daily Closings</h1>
         <p class="text-muted small mb-0">Audit operator end-of-day reports and variances</p>
     </div>
-    <a href="{{ route('admin.pos-sales-logs.secure') }}" class="btn btn-outline-primary btn-sm">Full POS transaction logs</a>
+    <a href="{{ route('admin.pos-sales-logs.index') }}" class="btn btn-outline-primary btn-sm">Full POS transaction logs</a>
 </div>
 
 <div class="card shadow-sm mb-4">

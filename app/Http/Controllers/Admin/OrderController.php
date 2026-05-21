@@ -8,7 +8,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Services\OrderEngine;
 use App\Services\OrderPaymentProofService;
-use App\Support\ListPage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -20,23 +19,18 @@ use Throwable;
 
 class OrderController extends Controller
 {
-    public function index(Request $request): View
+    public function index(): View
     {
-        $perPage = ListPage::perPage($request, 20);
-
         return view('admin.orders.index', [
             'allOrders' => Order::query()
-                ->supply()
                 ->with(['user', 'distributor'])
-                ->latest('id')
-                ->paginate($perPage, ['*'], 'all')
-                ->withQueryString(),
+                ->latest()
+                ->get(),
             'mainQueueOrders' => Order::query()
                 ->forPurchasingQueue()
                 ->with(['user', 'distributor', 'items.product'])
-                ->latest('id')
-                ->paginate($perPage, ['*'], 'main')
-                ->withQueryString(),
+                ->latest()
+                ->get(),
         ]);
     }
 

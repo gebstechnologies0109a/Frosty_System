@@ -40,7 +40,6 @@ Copy from `.env.example` and set at minimum:
 | `SESSION_DRIVER` | `database` |
 | `CACHE_STORE` | `database` |
 | `QUEUE_CONNECTION` | `database` |
-| `FROSTY_POS_LOGS_PASSWORD` | Strong secret (not the demo default) |
 
 Create the database in Forge, then on the server:
 

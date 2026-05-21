@@ -148,7 +148,7 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
             Route::delete('/page-builder/{page}', [AdminPageBuilderController::class, 'destroy'])->name('page-builder.destroy');
             Route::get('/page-builder/{page}/preview', [AdminPageBuilderController::class, 'preview'])->name('page-builder.preview');
 
-            Route::redirect('/pos/logs', '/admin/pos-sales-logs/secure')->name('pos.logs');
+            Route::redirect('/pos/logs', '/admin/pos-sales-logs')->name('pos.logs');
             Route::redirect('/pos/closings', '/admin/pos/daily-closings')->name('pos.closings');
 
             Route::resource('operators', AdminOperatorController::class);
@@ -177,8 +177,7 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
 
             Route::get('/operator-products', [AdminOperatorProductController::class, 'index'])->name('operator-products.index');
             Route::put('/operator-products/{operatorProduct}', [AdminOperatorProductController::class, 'update'])->name('operator-products.update');
-            Route::get('/pos-sales-logs/secure', [PosSalesLogController::class, 'secure'])->name('pos-sales-logs.secure');
-            Route::post('/pos-sales-logs/unlock', [PosSalesLogController::class, 'unlock'])->name('pos-sales-logs.unlock');
+            Route::redirect('/pos-sales-logs/secure', '/admin/pos-sales-logs')->name('pos-sales-logs.secure');
             Route::get('/pos-sales-logs/export', [PosSalesLogController::class, 'export'])->name('pos-sales-logs.export');
             Route::get('/pos-sales-logs', [PosSalesLogController::class, 'index'])->name('pos-sales-logs.index');
             Route::get('/pos/daily-closings', [AdminPosDailyClosingController::class, 'index'])->name('pos.daily-closings.index');

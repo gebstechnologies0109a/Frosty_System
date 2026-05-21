@@ -46,7 +46,7 @@ class AdminOrdersVisibilityTest extends TestCase
         $this->actingAs($admin)
             ->get(route('admin.orders.index'))
             ->assertOk()
-            ->assertSee('All supply orders', false)
+            ->assertSee('All orders', false)
             ->assertSee('#'.$regionalOrder->id, false)
             ->assertSee('General Santos City', false);
     }
@@ -71,5 +71,28 @@ class AdminOrdersVisibilityTest extends TestCase
             ->get(route('admin.dashboard'))
             ->assertOk()
             ->assertSee('Recent supply orders', false);
+    }
+
+    public function test_admin_orders_index_includes_all_order_types(): void
+    {
+        $admin = User::factory()->create(['role' => UserRole::SuperAdmin]);
+        $distributor = Distributor::query()->create(['name' => 'Main', 'is_main' => true]);
+        $operator = User::factory()->create(['role' => UserRole::Operator, 'distributor_id' => $distributor->id]);
+
+        $posOrder = Order::query()->create([
+            'user_id' => $operator->id,
+            'operator_id' => $operator->id,
+            'distributor_id' => $distributor->id,
+            'status' => OrderStatus::Completed,
+            'total_amount' => 25,
+            'total_points' => 0,
+            'source' => OrderSource::Operator,
+            'order_type' => \App\Enums\OrderType::Pos,
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.orders.index'))
+            ->assertOk()
+            ->assertSee('#'.$posOrder->id, false);
     }
 }

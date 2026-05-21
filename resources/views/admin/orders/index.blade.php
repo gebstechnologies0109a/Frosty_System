@@ -3,14 +3,14 @@
 @section('content')
 @include('admin.partials.page-header', [
     'title' => 'Orders',
-    'subtitle' => 'All supply orders and Main purchasing queue',
+    'subtitle' => 'All orders and Main purchasing queue',
     'actions' => '<a href="'.route('admin.orders.pending').'" class="btn btn-outline-primary btn-sm">Pending orders</a>
         <a href="'.route('admin.orders.analytics').'" class="btn btn-outline-secondary btn-sm">Analytics</a>',
 ])
 
 <div class="card border-0 shadow-sm mb-4">
-    <div class="card-header bg-white fw-semibold">All supply orders</div>
-    <p class="small text-muted px-3 pt-2 mb-0">Includes regional distributor orders (e.g. General Santos) and Main. Sorted by newest ID.</p>
+    <div class="card-header bg-white fw-semibold">All orders</div>
+    <p class="small text-muted px-3 pt-2 mb-0">Every order in the system, newest first.</p>
     <div class="table-responsive">
         <table class="table table-sm table-hover mb-0 align-middle">
             <thead class="table-light">
@@ -49,7 +49,6 @@
         </table>
     </div>
 </div>
-@include('partials.list-pagination', ['paginator' => $allOrders])
 
 <div class="card border-0 shadow-sm">
     <div class="card-header bg-white fw-semibold">Purchasing queue (Main distributor only)</div>
@@ -91,5 +90,4 @@
         </table>
     </div>
 </div>
-@include('partials.list-pagination', ['paginator' => $mainQueueOrders])
 @endsection
