@@ -17,10 +17,11 @@
     @endforeach
     </tbody>
 </table>
-{{ $operatorOrders->links('pagination::bootstrap-5', ['paginator' => $operatorOrders]) }}
+@include('partials.list-pagination', ['paginator' => $operatorOrders])
 <h2 class="h6 mt-4">My orders to Main</h2>
 <table class="table table-sm bg-white shadow-sm">
     <thead><tr><th>#</th><th>Pts</th><th>Status</th></tr></thead>
     <tbody>@foreach ($myOrders as $o)<tr><td>{{ $o->id }}</td><td>{{ $o->total_points }}</td><td>{{ $o->status->value }}</td></tr>@endforeach</tbody>
 </table>
+@include('partials.list-pagination', ['paginator' => $myOrders])
 @endsection

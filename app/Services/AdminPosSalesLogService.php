@@ -6,6 +6,7 @@ use App\Enums\OrderType;
 use App\Enums\UserRole;
 use App\Models\Order;
 use App\Models\User;
+use App\Support\ListPage;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -40,7 +41,7 @@ final class AdminPosSalesLogService
             $query->whereHas('items.operatorProduct', fn ($q) => $q->where('product_name', 'like', '%'.$request->input('product_name').'%'));
         }
 
-        $orders = $query->paginate(30)->withQueryString();
+        $orders = $query->paginate(ListPage::perPage($request, 20))->withQueryString();
         $orders->getCollection()->transform(fn (Order $order) => [
             'id' => $order->id,
             'operator' => $order->operator?->name ?? '—',

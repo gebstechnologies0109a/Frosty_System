@@ -7,6 +7,7 @@ use App\Models\Distributor;
 use App\Models\Order;
 use App\Models\Product;
 use App\Services\OrderEngine;
+use App\Support\ListPage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -14,7 +15,7 @@ use Illuminate\View\View;
 
 class OrderController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
         $profile = Auth::user()->distributorProfile;
 
@@ -22,18 +23,22 @@ class OrderController extends Controller
             abort(403);
         }
 
+        $perPage = ListPage::perPage($request, 20);
+
         return view('distributor.orders.index', [
             'distributor' => $profile,
             'operatorOrders' => Order::query()
                 ->where('distributor_id', $profile->id)
                 ->with(['user', 'items.product'])
                 ->latest()
-                ->paginate(15, ['*'], 'operator'),
+                ->paginate($perPage, ['*'], 'operator')
+                ->withQueryString(),
             'myOrders' => Order::query()
                 ->where('user_id', Auth::id())
                 ->with('items.product', 'distributor')
                 ->latest()
-                ->paginate(15, ['*'], 'mine'),
+                ->paginate($perPage, ['*'], 'mine')
+                ->withQueryString(),
         ]);
     }
 

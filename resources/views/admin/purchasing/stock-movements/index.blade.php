@@ -114,7 +114,7 @@
         </table>
     </div>
     @if ($movements->hasPages())
-        <div class="card-footer">{{ $movements->links() }}</div>
+        <div class="card-footer">@include('partials.list-pagination', ['paginator' => $movements])</div>
     @endif
 </div>
 @endsection

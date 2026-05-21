@@ -13,14 +13,17 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
+use App\Support\ListPage;
 use Illuminate\View\View;
 
 class OrderController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
         return view('operator.orders.index', [
-            'orders' => Auth::user()->orders()->with(['items.product', 'distributor'])->latest()->paginate(15),
+            'orders' => Auth::user()->orders()->with(['items.product', 'distributor'])->latest()
+                ->paginate(ListPage::perPage($request, 20))
+                ->withQueryString(),
         ]);
     }
 

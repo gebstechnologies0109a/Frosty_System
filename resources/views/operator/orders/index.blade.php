@@ -17,5 +17,5 @@
     @endforeach
     </tbody>
 </table>
-{{ $orders->links() }}
+@include('partials.list-pagination', ['paginator' => $orders])
 @endsection

@@ -100,5 +100,5 @@
     </table>
 </div>
 
-{{ $closings->links() }}
+@include('partials.list-pagination', ['paginator' => $closings])
 @endsection

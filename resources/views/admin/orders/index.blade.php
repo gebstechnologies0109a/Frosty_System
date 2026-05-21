@@ -48,7 +48,7 @@
         </table>
     </div>
 </div>
-{{ $orders->links() }}
+@include('partials.list-pagination', ['paginator' => $orders])
 
 <div class="card border-0 shadow-sm">
     <div class="card-header bg-white fw-semibold">All orders</div>
@@ -69,5 +69,5 @@
         </table>
     </div>
 </div>
-{{ $allOrders->links() }}
+@include('partials.list-pagination', ['paginator' => $allOrders])
 @endsection

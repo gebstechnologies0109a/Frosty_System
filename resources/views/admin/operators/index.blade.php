@@ -67,5 +67,5 @@
         </table>
     </div>
 </div>
-<div class="mt-3">{{ $operators->links() }}</div>
+<div class="mt-3">@include('partials.list-pagination', ['paginator' => $operators])</div>
 @endsection

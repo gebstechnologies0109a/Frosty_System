@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Services\OperatorProductsForSaleService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use App\Support\ListPage;
 use Illuminate\View\View;
 
 class AdminOperatorProductController extends Controller
@@ -24,7 +25,7 @@ class AdminOperatorProductController extends Controller
         }
 
         return view('admin.operator-products.index', [
-            'products' => $query->paginate(40)->withQueryString(),
+            'products' => $query->paginate(ListPage::perPage($request, 20))->withQueryString(),
             'operators' => User::query()->where('role', UserRole::Operator)->orderBy('name')->get(['id', 'name']),
             'filters' => $request->only(['operator_id']),
         ]);

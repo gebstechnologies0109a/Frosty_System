@@ -10,6 +10,7 @@ use App\Services\OrderEngine;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use App\Support\ListPage;
 use Illuminate\View\View;
 
 class AdminPendingOrderController extends Controller
@@ -33,7 +34,7 @@ class AdminPendingOrderController extends Controller
         }
 
         return view('admin.orders.pending', [
-            'orders' => $query->latest()->paginate(20)->withQueryString(),
+            'orders' => $query->latest()->paginate(ListPage::perPage($request, 20))->withQueryString(),
             'distributors' => \App\Models\Distributor::query()->orderBy('name')->get(['id', 'name']),
         ]);
     }

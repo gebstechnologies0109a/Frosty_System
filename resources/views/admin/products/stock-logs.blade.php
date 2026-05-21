@@ -20,5 +20,5 @@
         </tbody>
     </table>
 </div>
-{{ $movements->links() }}
+@include('partials.list-pagination', ['paginator' => $movements])
 @endsection

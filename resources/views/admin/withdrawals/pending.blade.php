@@ -26,5 +26,5 @@
         </tbody>
     </table>
 </div>
-{{ $withdrawals->links() }}
+@include('partials.list-pagination', ['paginator' => $withdrawals])
 @endsection

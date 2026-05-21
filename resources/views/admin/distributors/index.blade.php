@@ -41,5 +41,5 @@
         </tbody>
     </table>
 </div>
-{{ $distributors->links() }}
+@include('partials.list-pagination', ['paginator' => $distributors])
 @endsection

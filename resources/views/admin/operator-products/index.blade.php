@@ -45,7 +45,7 @@
         </tbody>
     </table>
 </div>
-{{ $products->links() }}
+@include('partials.list-pagination', ['paginator' => $products])
 
 <div class="modal fade" id="editModal" tabindex="-1">
     <div class="modal-dialog">

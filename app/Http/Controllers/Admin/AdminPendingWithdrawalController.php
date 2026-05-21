@@ -9,6 +9,7 @@ use App\Models\Withdrawal;
 use App\Services\WalletService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use App\Support\ListPage;
 use Illuminate\View\View;
 
 class AdminPendingWithdrawalController extends Controller
@@ -25,7 +26,7 @@ class AdminPendingWithdrawalController extends Controller
         }
 
         return view('admin.withdrawals.pending', [
-            'withdrawals' => $query->latest()->paginate(20)->withQueryString(),
+            'withdrawals' => $query->latest()->paginate(ListPage::perPage($request, 20))->withQueryString(),
         ]);
     }
 

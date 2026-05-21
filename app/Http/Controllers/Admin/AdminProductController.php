@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\StockMovement;
+use App\Support\ListPage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -32,7 +33,7 @@ class AdminProductController extends Controller
         }
 
         return view('admin.products.index', [
-            'products' => $query->orderBy('name')->paginate(25)->withQueryString(),
+            'products' => $query->orderBy('name')->paginate(ListPage::perPage($request, 20))->withQueryString(),
             'categories' => ProductCategory::cases(),
             'filters' => $filters,
         ]);
@@ -81,13 +82,14 @@ class AdminProductController extends Controller
         return back()->with('success', 'Product status updated.');
     }
 
-    public function stockLogs(Product $product): View
+    public function stockLogs(Request $request, Product $product): View
     {
         $movements = StockMovement::query()
             ->where('product_id', $product->id)
             ->with('user:id,name')
             ->latest('created_at')
-            ->paginate(30);
+            ->paginate(ListPage::perPage($request, 20))
+            ->withQueryString();
 
         return view('admin.products.stock-logs', compact('product', 'movements'));
     }

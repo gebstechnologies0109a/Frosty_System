@@ -11,5 +11,5 @@
     @endforeach
     </tbody>
 </table>
-{{ $wallets->links() }}
+@include('partials.list-pagination', ['paginator' => $wallets])
 @endsection

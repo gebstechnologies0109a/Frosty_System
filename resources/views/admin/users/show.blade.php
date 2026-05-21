@@ -55,7 +55,7 @@
                 </tbody>
             </table>
         </div>
-        {{ $activityLogs->links() }}
+        @include('partials.list-pagination', ['paginator' => $activityLogs])
     </div>
     <div class="tab-pane fade" id="tab-related">
         @if ($user->isOperator())

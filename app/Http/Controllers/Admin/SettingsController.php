@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\SystemSetting;
 use App\Services\ActivityLogger;
+use App\Support\ListPage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Contracts\View\View;
@@ -46,10 +47,12 @@ class SettingsController extends Controller
         return back()->with('success', 'Settings saved.');
     }
 
-    public function logs(): View
+    public function logs(Request $request): View
     {
         return view('admin.settings.logs', [
-            'logs' => ActivityLog::query()->with('user')->latest()->paginate(40),
+            'logs' => ActivityLog::query()->with('user')->latest()
+                ->paginate(ListPage::perPage($request, 20))
+                ->withQueryString(),
         ]);
     }
 }

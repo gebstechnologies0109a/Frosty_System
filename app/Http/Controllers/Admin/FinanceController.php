@@ -10,6 +10,7 @@ use App\Models\Wallet;
 use App\Models\Withdrawal;
 use App\Services\WalletService;
 use App\Support\FrostySettings;
+use App\Support\ListPage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -17,35 +18,42 @@ use Illuminate\View\View;
 
 class FinanceController extends Controller
 {
-    public function wallets(): View
+    public function wallets(Request $request): View
     {
         return view('admin.finance.wallets', [
-            'wallets' => Wallet::query()->with('user')->orderByDesc('balance')->paginate(20),
+            'wallets' => Wallet::query()->with('user')->orderByDesc('balance')
+                ->paginate(ListPage::perPage($request, 20))
+                ->withQueryString(),
         ]);
     }
 
-    public function rebates(): View
+    public function rebates(Request $request): View
     {
         return view('admin.finance.rebates', [
-            'entries' => PointsLedger::query()->with(['user', 'sourceUser', 'order'])->latest()->paginate(30),
+            'entries' => PointsLedger::query()->with(['user', 'sourceUser', 'order'])->latest()
+                ->paginate(ListPage::perPage($request, 20))
+                ->withQueryString(),
         ]);
     }
 
-    public function overrides(): View
+    public function overrides(Request $request): View
     {
         return view('admin.finance.overrides', [
             'entries' => PointsLedger::query()
                 ->where('type', PointLedgerType::Override)
                 ->with(['user', 'sourceUser', 'order'])
                 ->latest()
-                ->paginate(30),
+                ->paginate(ListPage::perPage($request, 20))
+                ->withQueryString(),
         ]);
     }
 
-    public function withdrawals(): View
+    public function withdrawals(Request $request): View
     {
         return view('admin.finance.withdrawals', [
-            'withdrawals' => Withdrawal::query()->with('user')->latest()->paginate(20),
+            'withdrawals' => Withdrawal::query()->with('user')->latest()
+                ->paginate(ListPage::perPage($request, 20))
+                ->withQueryString(),
         ]);
     }
 

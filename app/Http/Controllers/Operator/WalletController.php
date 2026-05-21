@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\PointsLedger;
 use App\Models\Withdrawal;
 use App\Services\WalletService;
+use App\Support\ListPage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -24,14 +25,15 @@ class WalletController extends Controller
         ]);
     }
 
-    public function rebates(): View
+    public function rebates(Request $request): View
     {
         return view('operator.rebates', [
             'entries' => PointsLedger::query()
                 ->where('user_id', Auth::id())
                 ->with(['sourceUser', 'order'])
                 ->latest()
-                ->paginate(20),
+                ->paginate(ListPage::perPage($request, 20))
+                ->withQueryString(),
         ]);
     }
 

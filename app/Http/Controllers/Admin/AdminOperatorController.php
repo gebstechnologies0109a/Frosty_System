@@ -17,6 +17,7 @@ use App\Models\Order;
 use App\Models\PosDailyClosing;
 use App\Models\User;
 use App\Services\AdminOperatorService;
+use App\Support\ListPage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -45,7 +46,7 @@ class AdminOperatorController extends Controller
         }
 
         return view('admin.operators.index', [
-            'operators' => $query->paginate(20)->withQueryString(),
+            'operators' => $query->paginate(ListPage::perPage($request, 20))->withQueryString(),
             'distributors' => Distributor::query()->orderBy('name')->get(['id', 'name']),
             'statuses' => UserStatus::cases(),
         ]);
@@ -132,7 +133,7 @@ class AdminOperatorController extends Controller
         return back()->with('success', 'Password reset successfully.');
     }
 
-    public function inventory(User $operator): View
+    public function inventory(Request $request, User $operator): View
     {
         $this->ensureOperator($operator);
 
@@ -140,19 +141,21 @@ class AdminOperatorController extends Controller
             ->where('operator_id', $operator->id)
             ->with('product:id,name,category')
             ->orderBy('product_id')
-            ->paginate(30);
+            ->paginate(ListPage::perPage($request, 20))
+            ->withQueryString();
 
         return view('admin.operators.inventory', compact('operator', 'items'));
     }
 
-    public function storeMenu(User $operator): View
+    public function storeMenu(Request $request, User $operator): View
     {
         $this->ensureOperator($operator);
 
         $products = OperatorProduct::query()
             ->where('operator_id', $operator->id)
             ->orderBy('product_name')
-            ->paginate(30);
+            ->paginate(ListPage::perPage($request, 20))
+            ->withQueryString();
 
         return view('admin.operators.store-menu', compact('operator', 'products'));
     }
@@ -166,13 +169,13 @@ class AdminOperatorController extends Controller
             ->where('operator_id', $operator->id)
             ->with(['items.operatorProduct'])
             ->latest()
-            ->paginate(25)
+            ->paginate(ListPage::perPage($request, 20))
             ->withQueryString();
 
         return view('admin.operators.pos-logs', compact('operator', 'orders'));
     }
 
-    public function dailyClosings(User $operator): View
+    public function dailyClosings(Request $request, User $operator): View
     {
         $this->ensureOperator($operator);
 
@@ -180,7 +183,8 @@ class AdminOperatorController extends Controller
             ->where('operator_id', $operator->id)
             ->with('approver:id,name')
             ->orderByDesc('closing_date')
-            ->paginate(25);
+            ->paginate(ListPage::perPage($request, 20))
+            ->withQueryString();
 
         return view('admin.operators.daily-closings', compact('operator', 'closings'));
     }

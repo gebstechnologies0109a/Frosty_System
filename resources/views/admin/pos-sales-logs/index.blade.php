@@ -75,5 +75,5 @@
     </div>
 @endforeach
 
-{{ $orders->links() }}
+@include('partials.list-pagination', ['paginator' => $orders])
 @endsection

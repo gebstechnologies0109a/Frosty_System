@@ -13,6 +13,7 @@ use App\Models\Distributor;
 use App\Models\Order;
 use App\Models\User;
 use App\Services\AdminDistributorService;
+use App\Support\ListPage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -39,7 +40,7 @@ class AdminDistributorController extends Controller
         }
 
         return view('admin.distributors.index', [
-            'distributors' => $query->paginate(20)->withQueryString(),
+            'distributors' => $query->paginate(ListPage::perPage($request, 20))->withQueryString(),
             'statuses' => UserStatus::cases(),
         ]);
     }
@@ -140,7 +141,7 @@ class AdminDistributorController extends Controller
         return back()->with('success', 'Password reset successfully.');
     }
 
-    public function orders(User $distributor): View
+    public function orders(Request $request, User $distributor): View
     {
         $this->ensureDistributor($distributor);
         $profile = $distributor->distributorProfile;
@@ -150,7 +151,8 @@ class AdminDistributorController extends Controller
             ->where('distributor_id', $profile->id)
             ->with(['user:id,name', 'items.product:id,name'])
             ->latest()
-            ->paginate(25);
+            ->paginate(ListPage::perPage($request, 20))
+            ->withQueryString();
 
         return view('admin.distributors.orders', compact('distributor', 'profile', 'orders'));
     }

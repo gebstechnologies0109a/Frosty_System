@@ -14,6 +14,7 @@ use App\Models\Distributor;
 use App\Models\User;
 use App\Services\AdminImpersonationService;
 use App\Services\AdminUserService;
+use App\Support\ListPage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -44,20 +45,21 @@ class UserController extends Controller
         }
 
         return view('admin.users.index', [
-            'users' => $query->paginate(20)->withQueryString(),
+            'users' => $query->paginate(ListPage::perPage($request, 20))->withQueryString(),
             'roles' => UserRole::creatableBySuperAdmin(),
             'statuses' => UserStatus::cases(),
         ]);
     }
 
-    public function show(User $user): View
+    public function show(Request $request, User $user): View
     {
         $user->load(['sponsor:id,name,first_name,last_name', 'assignedDistributor:id,name', 'distributorProfile', 'wallet']);
 
         $activityLogs = ActivityLog::query()
             ->where('user_id', $user->id)
             ->latest()
-            ->paginate(15, ['*'], 'activity_page');
+            ->paginate(ListPage::perPage($request, 20), ['*'], 'activity_page')
+            ->withQueryString();
 
         $referredOperators = collect();
         if ($user->isDistributor() && $user->distributorProfile) {

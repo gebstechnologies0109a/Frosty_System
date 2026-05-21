@@ -18,5 +18,5 @@
         </tbody>
     </table>
 </div>
-{{ $products->links() }}
+@include('partials.list-pagination', ['paginator' => $products])
 @endsection

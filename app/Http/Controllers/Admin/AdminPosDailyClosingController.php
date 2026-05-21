@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Services\PosDailyClosingService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use App\Support\ListPage;
 use Illuminate\View\View;
 
 class AdminPosDailyClosingController extends Controller
@@ -39,7 +40,7 @@ class AdminPosDailyClosingController extends Controller
         }
 
         return view('admin.pos-daily-closings.index', [
-            'closings' => $query->paginate(25)->withQueryString(),
+            'closings' => $query->paginate(ListPage::perPage($request, 20))->withQueryString(),
             'operators' => User::query()->where('role', UserRole::Operator)->orderBy('name')->get(['id', 'name']),
             'filters' => $request->only(['operator_id', 'status', 'date_from', 'date_to']),
         ]);

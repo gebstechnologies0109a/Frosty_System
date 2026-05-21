@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\StockMovement;
 use App\Models\User;
 use Illuminate\Http\Request;
+use App\Support\ListPage;
 use Illuminate\View\View;
 
 class StockMovementController extends Controller
@@ -68,7 +69,7 @@ class StockMovementController extends Controller
         }
 
         return view('admin.purchasing.stock-movements.index', [
-            'movements' => $query->paginate(50)->withQueryString(),
+            'movements' => $query->paginate(ListPage::perPage($request, 50))->withQueryString(),
             'filters' => $request->only([
                 'date_from', 'date_to', 'product_id', 'action_type',
                 'user_id', 'quantity_direction', 'category',
