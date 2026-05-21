@@ -166,10 +166,7 @@
                                     <td>{{ $order->user?->name }}</td>
                                     <td class="text-end">{{ $order->total_points }}</td>
                                     <td class="text-end">
-                                        <form method="post" action="{{ route('distributor.orders.approve', $order) }}" class="d-inline">
-                                            @csrf
-                                            <button type="submit" class="btn btn-sm btn-success">Approve</button>
-                                        </form>
+                                        @include('partials.distributor-order-approve', ['order' => $order])
                                     </td>
                                 </tr>
                             @empty

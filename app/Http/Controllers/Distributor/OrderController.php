@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Distributor;
 
+use App\Exceptions\PaymentProofRequiredException;
 use App\Http\Controllers\Controller;
 use App\Models\Distributor;
 use App\Models\Order;
@@ -72,7 +73,13 @@ class OrderController extends Controller
 
     public function approve(Request $request, Order $order, OrderEngine $engine): RedirectResponse
     {
-        $engine->approve($order, $request->user());
+        try {
+            $engine->approve($order, $request->user());
+        } catch (PaymentProofRequiredException $e) {
+            return back()->with('error', $e->getMessage());
+        } catch (\RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         return back()->with('success', 'Order approved.');
     }

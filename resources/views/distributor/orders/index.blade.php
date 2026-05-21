@@ -12,7 +12,7 @@
     @foreach ($operatorOrders as $o)
         <tr>
             <td>{{ $o->id }}</td><td>{{ $o->user->name }}</td><td>{{ $o->total_points }}</td><td>{{ $o->status->value }}</td>
-            <td>@if($o->status === \App\Enums\OrderStatus::Pending)<form method="post" action="{{ route('distributor.orders.approve', $o) }}">@csrf<button class="btn btn-sm btn-success">Approve</button></form>@endif</td>
+            <td>@include('partials.distributor-order-approve', ['order' => $o])</td>
         </tr>
     @endforeach
     </tbody>

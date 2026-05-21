@@ -245,4 +245,88 @@ class OrderPaymentProofTest extends TestCase
 
         $this->assertSame(OrderStatus::Pending, $order->fresh()->status);
     }
+
+    /** @return array{operator: User, distributor: Distributor, distributorUser: User} */
+    private function operatorOrderToDistributor(): array
+    {
+        Distributor::query()->create(['name' => 'Main', 'is_main' => true]);
+        $distributorUser = User::factory()->create(['role' => UserRole::Distributor]);
+        $distributor = Distributor::query()->create([
+            'name' => 'General Santos City',
+            'user_id' => $distributorUser->id,
+            'is_main' => false,
+        ]);
+        $operator = User::factory()->create([
+            'role' => UserRole::Operator,
+            'distributor_id' => $distributor->id,
+        ]);
+
+        return ['operator' => $operator, 'distributor' => $distributor, 'distributorUser' => $distributorUser];
+    }
+
+    public function test_distributor_cannot_approve_without_proof_returns_error_not_server_error(): void
+    {
+        ['operator' => $operator, 'distributor' => $distributor, 'distributorUser' => $distributorUser] = $this->operatorOrderToDistributor();
+
+        $order = Order::query()->create([
+            'user_id' => $operator->id,
+            'distributor_id' => $distributor->id,
+            'status' => OrderStatus::Pending,
+            'total_amount' => 50,
+            'total_points' => 2,
+            'source' => OrderSource::Operator,
+            'price_region' => PriceRegion::Davao,
+        ]);
+
+        $this->actingAs($distributorUser)
+            ->post(route('distributor.orders.approve', $order))
+            ->assertRedirect()
+            ->assertSessionHas('error', 'Cannot approve order. Proof of payment is missing.');
+
+        $this->assertSame(OrderStatus::Pending, $order->fresh()->status);
+    }
+
+    public function test_distributor_can_approve_order_with_proof(): void
+    {
+        ['operator' => $operator, 'distributor' => $distributor, 'distributorUser' => $distributorUser] = $this->operatorOrderToDistributor();
+
+        $order = Order::query()->create([
+            'user_id' => $operator->id,
+            'distributor_id' => $distributor->id,
+            'status' => OrderStatus::Pending,
+            'total_amount' => 50,
+            'total_points' => 2,
+            'source' => OrderSource::Operator,
+            'price_region' => PriceRegion::Davao,
+            'payment_proof_path' => 'order_payments/receipt.jpg',
+        ]);
+
+        $this->actingAs($distributorUser)
+            ->post(route('distributor.orders.approve', $order))
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        $this->assertSame(OrderStatus::Approved, $order->fresh()->status);
+    }
+
+    public function test_distributor_orders_index_hides_approve_when_proof_missing(): void
+    {
+        ['operator' => $operator, 'distributor' => $distributor, 'distributorUser' => $distributorUser] = $this->operatorOrderToDistributor();
+
+        Order::query()->create([
+            'user_id' => $operator->id,
+            'distributor_id' => $distributor->id,
+            'status' => OrderStatus::Pending,
+            'total_amount' => 50,
+            'total_points' => 2,
+            'source' => OrderSource::Operator,
+            'price_region' => PriceRegion::Davao,
+        ]);
+
+        $this->actingAs($distributorUser)
+            ->get(route('distributor.orders.index'))
+            ->assertOk()
+            ->assertSee('Awaiting payment proof', false)
+            ->assertDontSee('btn btn-sm btn-success">Approve', false);
+    }
 }

@@ -81,7 +81,17 @@ class Order extends Model
 
     public function isRoutedToMain(): bool
     {
-        return $this->distributor_id === Distributor::mainId();
+        if (! $this->distributor_id) {
+            return false;
+        }
+
+        if ($this->relationLoaded('distributor') && $this->distributor) {
+            return (bool) $this->distributor->is_main;
+        }
+
+        return (bool) Distributor::query()
+            ->whereKey($this->distributor_id)
+            ->value('is_main');
     }
 
     public function scopePending($query)
