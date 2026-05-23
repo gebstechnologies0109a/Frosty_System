@@ -33,6 +33,7 @@ class AdminPage extends Model
     protected $fillable = [
         'slug',
         'title',
+        'description',
         'status',
         'route_name',
         'path',
@@ -121,19 +122,13 @@ class AdminPage extends Model
     /** @return list<array<string, mixed>> */
     public function blocks(): array
     {
-        $layout = $this->layout_json ?? [];
+        return app(\App\Services\PageBuilderLayoutService::class)
+            ->normalizeBlocks($this->layout_json ?? []);
+    }
 
-        if (! is_array($layout)) {
-            return [];
-        }
-
-        $blocks = $layout['blocks'] ?? [];
-
-        if (! is_array($blocks)) {
-            return [];
-        }
-
-        return array_values(array_filter($blocks, fn ($block) => is_array($block)));
+    public function isPublishedFlag(): bool
+    {
+        return $this->isPublished();
     }
 
     public function blockCount(): int

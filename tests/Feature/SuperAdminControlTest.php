@@ -84,8 +84,13 @@ class SuperAdminControlTest extends TestCase
             ->get(route('admin.page-builder.index'))
             ->assertOk()
             ->assertSee('Page Builder')
-            ->assertSee('All pages')
-            ->assertSee('Total pages');
+            ->assertSee('Components', false)
+            ->assertSee('Canvas', false);
+
+        $this->actingAs($admin)
+            ->get(route('admin.page-builder.manage'))
+            ->assertOk()
+            ->assertSee('Total pages', false);
 
         $this->actingAs($admin)
             ->post(route('admin.page-builder.store'), [
@@ -120,7 +125,7 @@ class SuperAdminControlTest extends TestCase
                 'layout_json' => json_encode(['blocks' => [['id' => '1', 'type' => 'text', 'content' => 'Done']]]),
                 'finish' => '1',
             ])
-            ->assertRedirect(route('admin.page-builder.index'))
+            ->assertRedirect(route('admin.page-builder.manage'))
             ->assertSessionHas('success');
 
         $this->assertSame('Test Page Updated', $page->fresh()->title);

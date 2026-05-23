@@ -4,7 +4,8 @@
 @include('admin.partials.page-header', [
     'title' => 'Page Builder',
     'subtitle' => 'Edit any system or custom page layout',
-    'actions' => '<a href="'.route('admin.page-builder.create').'" class="btn btn-primary">Create new page</a>
+    'actions' => '<a href="'.route('admin.page-builder.index').'" class="btn btn-primary">Visual builder</a>
+        <a href="'.route('admin.page-builder.create').'" class="btn btn-outline-primary">Classic editor</a>
         <form method="post" action="'.route('admin.page-builder.sync').'" class="d-inline">'.csrf_field().'
         <button type="submit" class="btn btn-outline-secondary">Sync system pages</button></form>',
 ])

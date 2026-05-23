@@ -137,6 +137,15 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
             Route::get('/users/{user}/related', [AdminUserController::class, 'relatedData'])->name('users.related');
 
             Route::get('/page-builder', [AdminPageBuilderController::class, 'index'])->name('page-builder.index');
+            Route::get('/page-builder/manage', [AdminPageBuilderController::class, 'manage'])->name('page-builder.manage');
+            Route::get('/page-builder/pages', [AdminPageBuilderController::class, 'listPages'])->name('page-builder.pages');
+            Route::post('/page-builder/pages', [AdminPageBuilderController::class, 'storePage'])->name('page-builder.pages.store');
+            Route::get('/page-builder/pages/{page}', [AdminPageBuilderController::class, 'showPage'])->name('page-builder.pages.show');
+            Route::put('/page-builder/pages/{page}', [AdminPageBuilderController::class, 'updatePage'])->name('page-builder.pages.update');
+            Route::post('/page-builder/pages/{page}/publish', [AdminPageBuilderController::class, 'publishPage'])->name('page-builder.pages.publish');
+            Route::post('/page-builder/pages/{page}/template', [AdminPageBuilderController::class, 'applyTemplate'])->name('page-builder.pages.template');
+            Route::delete('/page-builder/pages/{page}', [AdminPageBuilderController::class, 'destroyPage'])->name('page-builder.pages.destroy');
+            Route::get('/page-preview/{page}', [AdminPageBuilderController::class, 'preview'])->name('page-preview');
             Route::post('/page-builder/sync', [AdminPageBuilderController::class, 'sync'])->name('page-builder.sync');
             Route::post('/page-builder/reorder', [AdminPageBuilderController::class, 'reorder'])->name('page-builder.reorder');
             Route::get('/page-builder/create', [AdminPageBuilderController::class, 'create'])->name('page-builder.create');

@@ -66,7 +66,7 @@ class PageBuilderHealthTest extends TestCase
 
         $this->actingAs($admin)
             ->delete(route('admin.page-builder.destroy', $copy))
-            ->assertRedirect(route('admin.page-builder.index'));
+            ->assertRedirect(route('admin.page-builder.manage'));
     }
 
     public function test_custom_page_public_route(): void

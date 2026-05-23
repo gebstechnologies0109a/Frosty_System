@@ -25,7 +25,7 @@ class PageBuilderSystemPagesTest extends TestCase
         $admin = User::factory()->create(['role' => UserRole::SuperAdmin]);
 
         $this->actingAs($admin)
-            ->get(route('admin.page-builder.index'))
+            ->get(route('admin.page-builder.manage'))
             ->assertOk()
             ->assertSee('Total pages')
             ->assertSee('All pages ('.count(SystemPagesRegistry::pages()).')')
@@ -60,7 +60,7 @@ class PageBuilderSystemPagesTest extends TestCase
                 ]),
                 'finish' => '1',
             ])
-            ->assertRedirect(route('admin.page-builder.index'));
+            ->assertRedirect(route('admin.page-builder.manage'));
 
         $this->actingAs($admin)
             ->get(route('admin.users.index'))

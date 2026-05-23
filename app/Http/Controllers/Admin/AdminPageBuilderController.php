@@ -7,11 +7,14 @@ use App\Http\Controllers\Controller;
 use App\Models\AdminPage;
 use App\Services\AdminPageRenderer;
 use App\Console\Commands\SyncSystemPagesCommand;
+use App\Services\PageBuilderLayoutService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+
 class AdminPageBuilderController extends Controller
 {
     public function sync(SyncSystemPagesCommand $sync): RedirectResponse
@@ -21,16 +24,168 @@ class AdminPageBuilderController extends Controller
         return back()->with('success', 'System pages synced. Any missing pages were registered.');
     }
 
-    public function index(): View
+    public function index(PageBuilderLayoutService $layouts): View
+    {
+        $pages = AdminPage::query()->orderBy('sort_order')->orderBy('title')->get();
+
+        return view('admin.page-builder.workspace', [
+            'pages' => $pages->map(fn (AdminPage $p) => [
+                'id' => $p->id,
+                'name' => $p->title,
+                'slug' => $p->slug,
+                'description' => $p->description,
+                'is_published' => $p->isPublished(),
+            ]),
+            'components' => collect(config('page-builder.components', []))
+                ->map(fn ($meta, $type) => ['type' => $type, 'label' => $meta['label'] ?? $type])
+                ->values(),
+            'templates' => collect(config('page-builder.templates', []))
+                ->map(fn ($meta, $key) => ['key' => $key, 'label' => $meta['label'] ?? $key])
+                ->values(),
+            'initialPageId' => $pages->first()?->id,
+            'routes' => [
+                'list' => route('admin.page-builder.pages'),
+                'store' => route('admin.page-builder.pages.store'),
+                'show' => url('/admin/page-builder/pages'),
+                'update' => url('/admin/page-builder/pages'),
+                'publish' => url('/admin/page-builder/pages'),
+                'destroy' => url('/admin/page-builder/pages'),
+                'preview' => url('/admin/page-preview'),
+                'manage' => route('admin.page-builder.manage'),
+                'dashboard' => route('admin.dashboard'),
+            ],
+        ]);
+    }
+
+    public function manage(): View
     {
         return view('admin.page-builder.index', [
-            'pages' => AdminPage::query()
-                ->orderBy('sort_order')
-                ->orderBy('title')
-                ->get(),
+            'pages' => AdminPage::query()->orderBy('sort_order')->orderBy('title')->get(),
             'blockTypes' => AdminPage::BLOCK_TYPES,
             'totalPages' => AdminPage::query()->count(),
         ]);
+    }
+
+    public function listPages(): JsonResponse
+    {
+        $pages = AdminPage::query()->orderBy('title')->get(['id', 'title', 'slug', 'status', 'description']);
+
+        return response()->json([
+            'pages' => $pages->map(fn (AdminPage $p) => [
+                'id' => $p->id,
+                'name' => $p->title,
+                'slug' => $p->slug,
+                'description' => $p->description,
+                'is_published' => $p->isPublished(),
+            ]),
+        ]);
+    }
+
+    public function storePage(Request $request, PageBuilderLayoutService $layouts): JsonResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'slug' => ['nullable', 'string', 'max:120', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/', 'unique:admin_pages,slug'],
+            'description' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        $slug = $validated['slug'] ?? Str::slug($validated['name']);
+        $slug = $this->uniqueSlug($slug);
+
+        $page = AdminPage::query()->create([
+            'title' => $validated['name'],
+            'slug' => $slug,
+            'description' => $validated['description'] ?? null,
+            'status' => AdminPageStatus::Draft,
+            'layout_json' => $layouts->wrapBlocks([]),
+            'sort_order' => (int) AdminPage::query()->max('sort_order') + 1,
+            'is_system' => false,
+        ]);
+
+        return response()->json([
+            'message' => 'Page created.',
+            'page' => $this->pagePayload($page),
+        ], 201);
+    }
+
+    public function showPage(AdminPage $page): JsonResponse
+    {
+        return response()->json(['page' => $this->pagePayload($page)]);
+    }
+
+    public function updatePage(Request $request, AdminPage $page, PageBuilderLayoutService $layouts): JsonResponse
+    {
+        $validated = $request->validate([
+            'name' => ['sometimes', 'required', 'string', 'max:255'],
+            'slug' => ['sometimes', 'required', 'string', 'max:120', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/', Rule::unique('admin_pages', 'slug')->ignore($page->id)],
+            'description' => ['nullable', 'string', 'max:2000'],
+            'layout' => ['nullable', 'array'],
+            'blocks' => ['nullable', 'array'],
+        ]);
+
+        $blocks = $validated['layout'] ?? $validated['blocks'] ?? null;
+        if ($blocks !== null) {
+            $normalized = $layouts->normalizeBlocks(['blocks' => $blocks]);
+            $page->layout_json = $layouts->wrapBlocks($normalized);
+        }
+
+        if (isset($validated['name'])) {
+            $page->title = $validated['name'];
+        }
+        if (isset($validated['slug']) && ! $page->is_system) {
+            $page->slug = Str::slug($validated['slug']);
+        }
+        if (array_key_exists('description', $validated)) {
+            $page->description = $validated['description'];
+        }
+
+        $page->save();
+
+        return response()->json([
+            'message' => 'Draft saved.',
+            'page' => $this->pagePayload($page->fresh()),
+        ]);
+    }
+
+    public function publishPage(AdminPage $page): JsonResponse
+    {
+        if ($page->blockCount() === 0) {
+            return response()->json(['message' => 'Add at least one component before publishing.'], 422);
+        }
+
+        $page->update(['status' => AdminPageStatus::Published]);
+
+        return response()->json([
+            'message' => 'Page published.',
+            'page' => $this->pagePayload($page->fresh()),
+        ]);
+    }
+
+    public function applyTemplate(Request $request, AdminPage $page, PageBuilderLayoutService $layouts): JsonResponse
+    {
+        $validated = $request->validate([
+            'template' => ['required', 'string', Rule::in(array_keys(config('page-builder.templates', [])))],
+        ]);
+
+        $blocks = $layouts->templateBlocks($validated['template']);
+        $page->layout_json = $layouts->wrapBlocks($blocks);
+        $page->save();
+
+        return response()->json([
+            'message' => 'Template applied.',
+            'page' => $this->pagePayload($page->fresh()),
+        ]);
+    }
+
+    public function destroyPage(AdminPage $page): JsonResponse
+    {
+        if ($page->is_system) {
+            return response()->json(['message' => 'System pages cannot be deleted.'], 403);
+        }
+
+        $page->delete();
+
+        return response()->json(['message' => 'Page deleted.']);
     }
 
     public function create(): View
@@ -81,7 +236,7 @@ class AdminPageBuilderController extends Controller
 
         if ($request->boolean('finish')) {
             return redirect()
-                ->route('admin.page-builder.index')
+                ->route('admin.page-builder.manage')
                 ->with('success', 'Page "'.$page->title.'" saved and finalized.');
         }
 
@@ -139,7 +294,7 @@ class AdminPageBuilderController extends Controller
         $page->delete();
 
         return redirect()
-            ->route('admin.page-builder.index')
+            ->route('admin.page-builder.manage')
             ->with('success', 'Page deleted.');
     }
 
@@ -147,8 +302,21 @@ class AdminPageBuilderController extends Controller
     {
         return view('admin.page-builder.preview', [
             'page' => $page,
+            'blocks' => $page->blocks(),
             'html' => $renderer->render($page),
         ]);
+    }
+
+    private function pagePayload(AdminPage $page): array
+    {
+        return [
+            'id' => $page->id,
+            'name' => $page->title,
+            'slug' => $page->slug,
+            'description' => $page->description,
+            'is_published' => $page->isPublished(),
+            'layout' => $page->blocks(),
+        ];
     }
 
     private function uniqueSlug(string $base): string
@@ -179,10 +347,12 @@ class AdminPageBuilderController extends Controller
         $layout = ['blocks' => []];
         if (! empty($validated['layout_json'])) {
             $decoded = json_decode($validated['layout_json'], true);
-            if (! is_array($decoded) || ! isset($decoded['blocks']) || ! is_array($decoded['blocks'])) {
+            if (! is_array($decoded)) {
                 abort(422, 'Invalid layout JSON.');
             }
-            $layout = $decoded;
+            $layout = app(PageBuilderLayoutService::class)->wrapBlocks(
+                app(PageBuilderLayoutService::class)->normalizeBlocks($decoded),
+            );
         } elseif ($existing?->layout_json) {
             $layout = $existing->layout_json;
         } else {

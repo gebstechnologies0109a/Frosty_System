@@ -4,7 +4,8 @@
 @include('admin.partials.page-header', [
     'title' => $isNew ? 'New Page' : 'Edit: '.$page->title,
     'subtitle' => $isNew ? 'Set title and slug, add blocks, then save' : ($page->route_name ? 'Linked route: '.$page->route_name.' ('.$page->path.')' : 'Custom page: /p/'.$page->slug),
-    'actions' => '<a href="'.route('admin.page-builder.index').'" class="btn btn-outline-secondary">← All pages</a>'
+    'actions' => '<a href="'.route('admin.page-builder.index').'" class="btn btn-outline-secondary">Visual builder</a>
+        <a href="'.route('admin.page-builder.manage').'" class="btn btn-outline-secondary">← All pages</a>'
         .($isNew ? '' : ($page->canOpenLive() ? ' <a href="'.$page->liveUrl().'" class="btn btn-outline-secondary" target="_blank">View live</a>' : '')
         .' <a href="'.route('admin.page-builder.preview', $page).'" class="btn btn-outline-secondary">Preview</a>'),
 ])
