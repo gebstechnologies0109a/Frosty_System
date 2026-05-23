@@ -33,6 +33,16 @@ enum UserRole: string
         ], true);
     }
 
+    public function canUsePageBuilder(): bool
+    {
+        return $this === self::SuperAdmin;
+    }
+
+    public function canBulkEditProducts(): bool
+    {
+        return $this->isAdmin();
+    }
+
     /** @return list<string> */
     public static function adminRoles(): array
     {

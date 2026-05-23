@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\StockMovement;
+use App\Services\ProductBulkUpdateService;
 use App\Support\ListPage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -36,7 +37,25 @@ class AdminProductController extends Controller
             'products' => $query->orderBy('name')->paginate(ListPage::perPage($request, 20))->withQueryString(),
             'categories' => ProductCategory::cases(),
             'filters' => $filters,
+            'canBulkEdit' => $request->user()?->role?->canBulkEditProducts() ?? false,
         ]);
+    }
+
+    public function bulkUpdate(Request $request, ProductBulkUpdateService $bulkUpdate): RedirectResponse
+    {
+        abort_unless($request->user()?->role?->canBulkEditProducts(), 403, 'You do not have permission to bulk edit products.');
+
+        $validated = $request->validate(ProductBulkUpdateService::validationRules());
+
+        if (! $bulkUpdate->hasBulkEditFields($validated)) {
+            return back()->withErrors(['bulk' => 'Fill at least one field to update (category, points, status, or a regional price).']);
+        }
+
+        $updated = $bulkUpdate->apply($validated);
+
+        return redirect()
+            ->route('admin.products.index', $request->query())
+            ->with('success', "Updated {$updated} product(s).");
     }
 
     public function create(): RedirectResponse

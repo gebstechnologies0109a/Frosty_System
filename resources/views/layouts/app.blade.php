@@ -23,9 +23,11 @@
                     <a class="nav-link" href="{{ route('admin.purchasing.analytics') }}">Analytics</a>
                     <a class="nav-link" href="{{ route('admin.purchasing.stock-movements.index') }}">Stock Logs</a>
                 @endif
+                @if ($role?->canUsePageBuilder())
+                    <a class="nav-link" href="{{ route('admin.page-builder.index') }}">Page Builder</a>
+                @endif
                 @if ($role === \App\Enums\UserRole::SuperAdmin)
                     <a class="nav-link" href="{{ route('admin.users.index') }}">Users</a>
-                    <a class="nav-link" href="{{ route('admin.page-builder.index') }}">Page Builder</a>
                     <a class="nav-link" href="{{ route('admin.operators.index') }}">Operators</a>
                     <a class="nav-link" href="{{ route('admin.distributors.index') }}">Distributors</a>
                     <a class="nav-link" href="{{ route('admin.orders.pending') }}">Pending Orders</a>

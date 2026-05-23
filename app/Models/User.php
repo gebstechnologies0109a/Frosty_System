@@ -141,6 +141,11 @@ class User extends Authenticatable
         return $this->role?->isAdmin() ?? false;
     }
 
+    public function isSuperAdmin(): bool
+    {
+        return $this->role === UserRole::SuperAdmin;
+    }
+
     public function earnsRebates(): bool
     {
         return $this->isOperator();

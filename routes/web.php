@@ -88,8 +88,8 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
         });
 
         Route::get('/products', [AdminProductController::class, 'index'])->name('products.index');
+        Route::post('/products/bulk-update', [AdminProductController::class, 'bulkUpdate'])->name('products.bulk-update');
         Route::get('/products/create', [AdminProductController::class, 'create'])->name('products.create');
-        Route::get('/products/bulk-edit', fn () => to_route('admin.purchasing.products.index'));
         Route::get('/products/{product}', [AdminProductController::class, 'show'])->name('products.show');
         Route::get('/products/{product}/edit', [AdminProductController::class, 'edit'])->name('products.edit');
         Route::delete('/products/{product}', [AdminProductController::class, 'destroy'])->name('products.destroy');
@@ -136,6 +136,7 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
             Route::post('/users/{user}/impersonate', [AdminUserController::class, 'impersonate'])->name('users.impersonate');
             Route::get('/users/{user}/related', [AdminUserController::class, 'relatedData'])->name('users.related');
 
+            Route::middleware('super_admin')->group(function () {
             Route::get('/page-builder', [AdminPageBuilderController::class, 'index'])->name('page-builder.index');
             Route::get('/page-builder/manage', [AdminPageBuilderController::class, 'manage'])->name('page-builder.manage');
             Route::get('/page-builder/pages', [AdminPageBuilderController::class, 'listPages'])->name('page-builder.pages');
@@ -156,6 +157,7 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
             Route::patch('/page-builder/{page}/toggle-status', [AdminPageBuilderController::class, 'toggleStatus'])->name('page-builder.toggle-status');
             Route::delete('/page-builder/{page}', [AdminPageBuilderController::class, 'destroy'])->name('page-builder.destroy');
             Route::get('/page-builder/{page}/preview', [AdminPageBuilderController::class, 'preview'])->name('page-builder.preview');
+            });
 
             Route::redirect('/pos/logs', '/admin/pos-sales-logs')->name('pos.logs');
             Route::redirect('/pos/closings', '/admin/pos/daily-closings')->name('pos.closings');

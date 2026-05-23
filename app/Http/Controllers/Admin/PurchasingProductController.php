@@ -11,6 +11,7 @@ use App\Services\ProductCatalogExportService;
 use App\Services\ProductCatalogFilter;
 use App\Services\ProductCatalogImportService;
 use App\Support\ProductInventoryService;
+use App\Services\ProductBulkUpdateService;
 use App\Support\ProductRegionalPricing;
 use App\Support\StockMovementLogger;
 use Illuminate\Database\Eloquent\Builder;
@@ -46,71 +47,30 @@ class PurchasingProductController extends Controller
             'categories' => $this->groupedProducts($request, $filters),
             'categoryLabels' => $this->categoryLabels(),
             'productCategories' => ProductCategory::cases(),
-            'canBulkManage' => auth()->user()?->role === UserRole::PurchasingAdmin,
+            'canBulkManage' => auth()->user()?->role?->canBulkEditProducts() ?? false,
             'filters' => $filters,
             'hasActiveFilters' => $this->hasActiveFilters($filters),
         ]);
     }
 
-    public function bulkUpdate(Request $request): RedirectResponse
+    public function bulkUpdate(Request $request, ProductBulkUpdateService $bulkUpdate): RedirectResponse
     {
-        $this->ensurePurchasingAdmin($request);
+        $this->ensureCanBulkManage($request);
 
-        $validated = $request->validate([
-            'product_ids' => ['required', 'array', 'min:1'],
-            'product_ids.*' => ['integer', 'exists:products,id'],
-            'category' => ['nullable', Rule::in(ProductCategory::values())],
-            'points' => ['nullable', 'integer', 'min:0'],
-            'status' => ['nullable', 'in:active,inactive'],
-            'price_luzon' => ['nullable', 'numeric', 'min:0'],
-            'price_davao' => ['nullable', 'numeric', 'min:0'],
-            'price_tacloban' => ['nullable', 'numeric', 'min:0'],
-        ]);
+        $validated = $request->validate(ProductBulkUpdateService::validationRules());
 
-        if (! $this->hasBulkEditFields($validated)) {
+        if (! $bulkUpdate->hasBulkEditFields($validated)) {
             return back()->withErrors(['bulk' => 'Fill at least one field to update (category, points, status, or a regional price).']);
         }
 
-        $updated = 0;
-
-        DB::transaction(function () use ($validated, &$updated) {
-            $products = Product::query()->with('prices')->whereIn('id', $validated['product_ids'])->get();
-
-            foreach ($products as $product) {
-                $attrs = [];
-
-                if (! empty($validated['category'])) {
-                    $attrs['category'] = $validated['category'];
-                    $attrs['points'] = $this->pointsForCategory($validated['category']);
-                } elseif (isset($validated['points']) && $validated['points'] !== '' && $validated['points'] !== null) {
-                    if ($product->category !== ProductCategory::Softserve) {
-                        $attrs['points'] = (int) $validated['points'];
-                    }
-                }
-
-                if (! empty($validated['status'])) {
-                    $attrs['status'] = $validated['status'];
-                }
-
-                if ($attrs !== []) {
-                    $product->update($attrs);
-                }
-
-                $priceOverrides = $this->priceOverridesFromValidated($validated);
-                if ($priceOverrides !== []) {
-                    ProductRegionalPricing::applyPartial($product, $priceOverrides);
-                }
-
-                $updated++;
-            }
-        });
+        $updated = $bulkUpdate->apply($validated);
 
         return $this->bulkSuccessRedirect("Updated {$updated} product(s).");
     }
 
     public function bulkDelete(Request $request): RedirectResponse
     {
-        $this->ensurePurchasingAdmin($request);
+        $this->ensureCanBulkManage($request);
 
         $validated = $request->validate([
             'product_ids' => ['required', 'array', 'min:1'],
@@ -155,9 +115,9 @@ class PurchasingProductController extends Controller
         return $this->bulkSuccessRedirect($message);
     }
 
-    public function bulkPriceUpdate(Request $request): RedirectResponse
+    public function bulkPriceUpdate(Request $request, ProductBulkUpdateService $bulkUpdate): RedirectResponse
     {
-        $this->ensurePurchasingAdmin($request);
+        $this->ensureCanBulkManage($request);
 
         $validated = $request->validate([
             'product_ids' => ['required', 'array', 'min:1'],
@@ -168,7 +128,7 @@ class PurchasingProductController extends Controller
             'price_percent' => ['nullable', 'numeric'],
         ]);
 
-        $hasManual = $this->priceOverridesFromValidated($validated) !== [];
+        $hasManual = $bulkUpdate->priceOverridesFromValidated($validated) !== [];
         $hasPercent = isset($validated['price_percent']) && $validated['price_percent'] !== '' && $validated['price_percent'] !== null;
 
         if (! $hasManual && ! $hasPercent) {
@@ -176,7 +136,7 @@ class PurchasingProductController extends Controller
         }
 
         $percent = $hasPercent ? (float) $validated['price_percent'] : null;
-        $overrides = $this->priceOverridesFromValidated($validated);
+        $overrides = $bulkUpdate->priceOverridesFromValidated($validated);
         $updated = 0;
 
         DB::transaction(function () use ($validated, $percent, $overrides, &$updated) {
@@ -191,9 +151,9 @@ class PurchasingProductController extends Controller
         return $this->bulkSuccessRedirect("Updated prices for {$updated} product(s).");
     }
 
-    public function bulkCategoryUpdate(Request $request): RedirectResponse
+    public function bulkCategoryUpdate(Request $request, ProductBulkUpdateService $bulkUpdate): RedirectResponse
     {
-        $this->ensurePurchasingAdmin($request);
+        $this->ensureCanBulkManage($request);
 
         $validated = $request->validate([
             'product_ids' => ['required', 'array', 'min:1'],
@@ -203,13 +163,13 @@ class PurchasingProductController extends Controller
 
         $updated = 0;
 
-        DB::transaction(function () use ($validated, &$updated) {
+        DB::transaction(function () use ($validated, $bulkUpdate, &$updated) {
             Product::query()
                 ->whereIn('id', $validated['product_ids'])
-                ->each(function (Product $product) use ($validated, &$updated) {
+                ->each(function (Product $product) use ($validated, $bulkUpdate, &$updated) {
                     $product->update([
                         'category' => $validated['category'],
-                        'points' => $this->pointsForCategory($validated['category']),
+                        'points' => $bulkUpdate->pointsForCategory($validated['category']),
                     ]);
                     $updated++;
                 });
@@ -220,7 +180,7 @@ class PurchasingProductController extends Controller
 
     public function bulkInventoryUpdate(Request $request): RedirectResponse
     {
-        $this->ensurePurchasingAdmin($request);
+        $this->ensureCanBulkManage($request);
 
         $validated = $request->validate([
             'product_ids' => ['required', 'array', 'min:1'],
@@ -267,7 +227,7 @@ class PurchasingProductController extends Controller
 
     public function export(Request $request, ProductCatalogExportService $export): StreamedResponse|\Illuminate\Http\Response
     {
-        $this->ensurePurchasingAdmin($request);
+        $this->ensureCanBulkManage($request);
 
         $request->validate([
             'format' => ['nullable', 'in:csv,xlsx'],
@@ -283,7 +243,7 @@ class PurchasingProductController extends Controller
 
     public function importTemplate(Request $request, ProductCatalogExportService $export): StreamedResponse|\Illuminate\Http\Response
     {
-        $this->ensurePurchasingAdmin($request);
+        $this->ensureCanBulkManage($request);
 
         $request->validate(['format' => ['nullable', 'in:csv,xlsx']]);
 
@@ -292,7 +252,7 @@ class PurchasingProductController extends Controller
 
     public function import(Request $request, ProductCatalogImportService $import): RedirectResponse
     {
-        $this->ensurePurchasingAdmin($request);
+        $this->ensureCanBulkManage($request);
 
         $request->validate([
             'file' => ['required', 'file', 'mimes:csv,txt,xlsx,xls', 'max:10240'],
@@ -307,7 +267,7 @@ class PurchasingProductController extends Controller
 
     public function importReport(Request $request): View|RedirectResponse
     {
-        $this->ensurePurchasingAdmin($request);
+        $this->ensureCanBulkManage($request);
 
         $report = session('product_import_report');
 
@@ -395,9 +355,9 @@ class PurchasingProductController extends Controller
             ->with('success', 'Product status updated.');
     }
 
-    private function ensurePurchasingAdmin(Request $request): void
+    private function ensureCanBulkManage(Request $request): void
     {
-        abort_unless($request->user()?->role === UserRole::PurchasingAdmin, 403, 'Only Purchasing Admin can run bulk actions.');
+        abort_unless($request->user()?->role?->canBulkEditProducts(), 403, 'You do not have permission to run bulk product actions.');
     }
 
     private function bulkSuccessRedirect(string $message): RedirectResponse
@@ -405,36 +365,6 @@ class PurchasingProductController extends Controller
         return redirect()
             ->route('admin.purchasing.products.index', request()->query())
             ->with('success', $message);
-    }
-
-    private function pointsForCategory(string $category): int
-    {
-        return $category === ProductCategory::Softserve->value ? 2 : 0;
-    }
-
-    /** @param  array<string, mixed>  $validated */
-    private function hasBulkEditFields(array $validated): bool
-    {
-        return ! empty($validated['category'])
-            || (isset($validated['points']) && $validated['points'] !== '' && $validated['points'] !== null)
-            || ! empty($validated['status'])
-            || $this->priceOverridesFromValidated($validated) !== [];
-    }
-
-    /** @param  array<string, mixed>  $validated
-     * @return array<string, float>
-     */
-    private function priceOverridesFromValidated(array $validated): array
-    {
-        $overrides = [];
-
-        foreach (['luzon' => 'price_luzon', 'davao' => 'price_davao', 'tacloban' => 'price_tacloban'] as $region => $key) {
-            if (isset($validated[$key]) && $validated[$key] !== '' && $validated[$key] !== null) {
-                $overrides[$region] = (float) $validated[$key];
-            }
-        }
-
-        return $overrides;
     }
 
     /** @return array<string, mixed> */
